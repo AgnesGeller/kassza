@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="hu">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#164f3a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Kassza">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css">
+  <title>Kassza – Díszkertek</title>
+</head>
+<body>
+  <div class="botanical botanical-left" aria-hidden="true"></div>
+  <div class="botanical botanical-right" aria-hidden="true"></div>
+
+  <section id="welcomeView" class="welcome shell">
+    <img class="welcome-logo" src="assets/diszkertek-logo.png" alt="Díszkertek">
+    <h1>Kassza</h1>
+    <label class="field">
+      <span>Ki használja most?</span>
+      <select id="profileSelect" class="visually-hidden" aria-hidden="true" tabindex="-1"><option value="">Név kiválasztása…</option></select>
+      <span class="profile-dropdown">
+        <button id="profileDropdownButton" class="profile-dropdown-button" type="button" aria-haspopup="listbox" aria-expanded="false"><span id="selectedProfileName">Név kiválasztása</span></button>
+        <span id="profileButtons" class="profile-menu" role="listbox" aria-label="Név kiválasztása" hidden></span>
+      </span>
+    </label>
+    <button id="enterButton" class="button button-primary" type="button" disabled>Belépés</button>
+  </section>
+
+  <div id="appView" class="app" hidden>
+    <header class="topbar">
+      <a class="logo" href="#" id="homeLink"><img src="assets/diszkertek-emblem.png" alt=""><span><small>DÍSZKERTEK</small>Kassza</span></a>
+      <div class="user-menu"><span id="activeUser"></span><button id="switchUser" type="button">Váltás</button></div>
+    </header>
+
+    <main class="dashboard shell-wide">
+      <section class="hero-row">
+        <div><p class="eyebrow" id="viewEyebrow">MAI KASSZA</p><h1 id="viewTitle">Szia!</h1></div>
+        <div class="app-actions">
+          <button id="installButton" class="button button-soft" type="button">⬇ Telepítés</button>
+          <button id="updateButton" class="button button-soft" type="button">↻ Frissítés</button>
+        </div>
+      </section>
+
+      <section id="summaryCards" class="summary-grid" aria-label="Pénzügyi összesítő">
+        <article class="summary-card balance"><span>Jelenlegi egyenleg</span><strong id="balanceValue">0 Ft</strong></article>
+        <article class="summary-card income"><span>Összes bevétel</span><strong id="incomeValue">0 Ft</strong></article>
+        <article class="summary-card expense"><span>Összes kiadás</span><strong id="expenseValue">0 Ft</strong></article>
+      </section>
+
+      <nav id="managerTabs" class="manager-tabs" aria-label="Ági és Tamás nézete" hidden>
+        <button id="managerStatsTab" class="manager-tab active" type="button">Teljes statisztika</button>
+        <button id="managerEntryTab" class="manager-tab" type="button">＋ Saját kassza</button>
+      </nav>
+
+      <section id="workerPanel" class="worker-layout">
+        <article class="card entry-card">
+          <div class="section-heading"><div><p class="eyebrow">ÚJ BEJEGYZÉS</p><h2>Pénzmozgás rögzítése</h2></div></div>
+          <form id="entryForm">
+            <fieldset class="type-picker"><legend>Mi történt?</legend>
+              <label class="type-option income-option"><input type="radio" name="direction" value="income" checked><span class="type-icon">＋</span><b>Bevétel</b><small>Pénz érkezett</small></label>
+              <label class="type-option expense-option"><input type="radio" name="direction" value="expense"><span class="type-icon">−</span><b>Kiadás</b><small>Pénzt adtam ki</small></label>
+            </fieldset>
+            <div class="form-grid">
+              <label class="field"><span>Kategória</span><select name="category" id="categorySelect" required></select></label>
+              <label class="field"><span>Dátum</span><input name="date" type="date" required></label>
+              <label class="field amount-field"><span>Összeg</span><div><input name="amount" type="number" min="1" step="1" inputmode="numeric" required><b>Ft</b></div></label>
+              <label class="field"><span>Ügyfél / munkatárs / beszerzés</span><input name="partner" autocomplete="organization"></label>
+              <label class="field full"><span>Cím vagy működési költség</span><input name="address" autocomplete="street-address"></label>
+              <label class="field full"><span>Megjegyzés</span><textarea name="note" rows="2"></textarea></label>
+            </div>
+            <button class="button button-primary submit-entry" type="submit">Bejegyzés mentése</button>
+            <p id="formStatus" class="form-status" role="status" aria-live="polite"></p>
+          </form>
+        </article>
+
+        <aside class="card recent-card"><div class="section-heading"><div><p class="eyebrow">SAJÁT TÉTELEK</p><h2>Legutóbbi bejegyzések</h2></div></div><div id="recentEntries" class="entry-list"></div><button id="showAllOwn" class="button button-soft full-button" type="button">Összes saját tétel</button></aside>
+      </section>
+
+      <section id="adminPanel" class="admin-panel" hidden>
+        <article class="card filter-card">
+          <div class="section-heading"><div><p class="eyebrow">KERESÉS ÉS KIMUTATÁS</p><h2>Munkáltatói áttekintő</h2></div><button id="clearFilters" class="text-button" type="button">Szűrők törlése</button></div>
+          <div class="filters">
+            <label class="field"><span>Dátumtól</span><input id="filterFrom" type="date"></label>
+            <label class="field"><span>Dátumig</span><input id="filterTo" type="date"></label>
+            <label class="field"><span>Csoportvezető</span><select id="filterLeader"><option value="">Mindenki</option></select></label>
+            <label class="field search-field"><span>Ügyfél, cím vagy megjegyzés</span><input id="filterText" type="search"></label>
+          </div>
+        </article>
+        <article class="card table-card">
+          <div class="section-heading"><div><p class="eyebrow">PÉNZMOZGÁSOK</p><h2>Részletes lista</h2></div><button id="exportButton" class="button button-soft" type="button">CSV letöltése</button></div>
+          <div class="table-wrap"><table><thead><tr><th>Dátum</th><th>Csoportvezető</th><th>Típus</th><th>Ügyfél / részlet</th><th>Kategória</th><th class="number">Összeg</th><th></th></tr></thead><tbody id="entriesTable"></tbody></table></div>
+          <div id="emptyTable" class="empty-state" hidden>Nincs a szűrésnek megfelelő bejegyzés.</div>
+        </article>
+      </section>
+    </main>
+  </div>
+
+  <dialog id="confirmDialog"><form method="dialog"><p class="eyebrow">MEGERŐSÍTÉS</p><h2>Törlöd a bejegyzést?</h2><p>Ez a művelet nem vonható vissza.</p><div class="dialog-actions"><button class="button button-soft" value="cancel">Mégse</button><button id="confirmDelete" class="button button-danger" value="default">Törlés</button></div></form></dialog>
+  <dialog id="installHelpDialog"><form method="dialog"><button class="dialog-close" value="cancel" aria-label="Bezárás">×</button><p class="eyebrow">APP TELEPÍTÉSE</p><h2>Tedd a főképernyőre</h2><p><b>iPhone / iPad:</b> nyisd meg Safariban, koppints a Megosztás ikonra, majd válaszd a „Főképernyőhöz adás” lehetőséget.</p><p><b>Android:</b> nyisd meg Chrome-ban, majd a böngésző menüjében válaszd az „Alkalmazás telepítése” vagy „Hozzáadás a kezdőképernyőhöz” lehetőséget.</p><button class="button button-primary full-button" value="cancel">Rendben</button></form></dialog>
+
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,11 @@
+{
+  "name":"Díszkertek Kassza",
+  "short_name":"Kassza",
+  "description":"Egyszerű napi pénzügyi nyilvántartás csoportvezetőknek.",
+  "start_url":"./",
+  "display":"standalone",
+  "background_color":"#fbfcf8",
+  "theme_color":"#164f3a",
+  "lang":"hu",
+  "icons":[{"src":"icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}]
+}
