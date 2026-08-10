@@ -12,6 +12,8 @@ const welcomeView = $("#welcomeView"), appView = $("#appView"), form = $("#entry
 let session = readJSON(SESSION_KEY, null);
 let pendingDeleteId = null;
 let managerView = "statistics";
+let editingId = null;
+let showAllOwnEntries = false;
 
 function readJSON(key, fallback) { try { return JSON.parse(localStorage.getItem(key)) ?? fallback; } catch (_) { return fallback; } }
 function entries() { return readJSON(STORAGE_KEY, []); }
@@ -59,12 +61,11 @@ function openApp(nextSession) {
   $("#managerStatsTab").classList.toggle("active",manager);
   $("#managerEntryTab").classList.remove("active");
   $("#balanceLabel").textContent=hasStatistics?"Teljes kassza":"Kasszámban";
-  $("#activeUser").textContent=admin?"Munkáltató":manager?`${session.name} · teljes nézet`:session.name;
-  $("#viewEyebrow").textContent=hasStatistics?"TELJES ÁTTEKINTÉS":"MAI KASSZA";
-  $("#viewTitle").textContent=admin?"Kassza áttekintő":manager?`Szia, ${session.name}!`:`Szia, ${session.name}!`;
+  $("#activeUser").textContent=admin?"Munkáltató":session.name;
+  $("#viewTitle").textContent=admin?"Kassza áttekintő":`Szia, ${session.name}!`;
   render();
 }
-function switchUser() { localStorage.removeItem(SESSION_KEY); session=null; appView.hidden=true; welcomeView.hidden=false; $("#profileSelect").value=""; $("#selectedProfileName").textContent="Név kiválasztása"; $("#profileButtons").hidden=true; $("#profileDropdownButton").setAttribute("aria-expanded","false"); $("#profileButtons").querySelectorAll(".profile-button").forEach(button=>button.classList.remove("active")); $("#enterButton").disabled=true; }
+function switchUser() { resetEntryEditor();showAllOwnEntries=false;localStorage.removeItem(SESSION_KEY); session=null; appView.hidden=true; welcomeView.hidden=false; $("#profileSelect").value=""; $("#selectedProfileName").textContent="Név kiválasztása"; $("#profileButtons").hidden=true; $("#profileDropdownButton").setAttribute("aria-expanded","false"); $("#profileButtons").querySelectorAll(".profile-button").forEach(button=>button.classList.remove("active")); $("#enterButton").disabled=true; }
 function filteredEntries() {
   let list=entries();
   if(session?.role!=="admin"&&session?.role!=="manager") return list.filter(item=>item.leader===session.name);
@@ -78,9 +79,10 @@ function renderSummary(list) {
   const sum=totals(list); $("#incomeValue").textContent=money(sum.income); $("#expenseValue").textContent=money(sum.expense); $("#balanceValue").textContent=money(sum.income-sum.expense);
 }
 function renderRecent(list) {
-  const target=$("#recentEntries"),recent=[...list].sort((a,b)=>b.createdAt.localeCompare(a.createdAt)).slice(0,6);
+  const target=$("#recentEntries"),sorted=[...list].sort((a,b)=>b.createdAt.localeCompare(a.createdAt)),recent=showAllOwnEntries?sorted:sorted.slice(0,6);
   const ownTotal=totals(list);$("#ownCashValue").textContent=money(ownTotal.income-ownTotal.expense);
-  target.innerHTML=recent.length?recent.map(item=>`<div class="entry-item"><span class="entry-symbol ${item.direction}">${item.direction==="income"?"+":"−"}</span><span class="entry-info"><b>${escapeHTML(item.designation||item.partner||item.category)}</b><small>${formatDate(item.date)} · ${escapeHTML(item.category)}${item.receipt?` · ${escapeHTML(item.receipt)}`:""}</small></span><span class="entry-amount ${item.direction}">${item.direction==="income"?"+":"−"}${money(item.amount)}</span></div>`).join(""):`<div class="empty-list">Nincs bejegyzés</div>`;
+  $("#showAllOwn").hidden=sorted.length<=6;$("#showAllOwn").textContent=showAllOwnEntries?"Legutóbbi tételek":"Összes saját tétel";
+  target.innerHTML=recent.length?recent.map(item=>`<div class="entry-item"><span class="entry-symbol ${item.direction}">${item.direction==="income"?"+":"−"}</span><span class="entry-info"><b>${escapeHTML(item.designation||item.partner||item.category)}</b><small>${formatDate(item.date)} · ${escapeHTML(item.category)}${item.receipt?` · ${escapeHTML(item.receipt)}`:""}</small></span><span class="entry-side"><span class="entry-amount ${item.direction}">${item.direction==="income"?"+":"−"}${money(item.amount)}</span><span class="entry-actions"><button class="entry-action" type="button" data-edit-own="${item.id}" aria-label="Szerkesztés">✎</button><button class="entry-action delete" type="button" data-delete-own="${item.id}" aria-label="Törlés">✕</button></span></span></div>`).join(""):`<div class="empty-list">Nincs bejegyzés</div>`;
 }
 function renderTable(list) {
   const sorted=[...list].sort((a,b)=>b.date.localeCompare(a.date)||b.createdAt.localeCompare(a.createdAt));
@@ -95,6 +97,20 @@ function exportCSV() {
   const url=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"})),a=document.createElement("a"); a.href=url;a.download=`kassza-${today()}.csv`;a.click();URL.revokeObjectURL(url);
 }
 
+function resetEntryEditor(direction="income") {
+  editingId=null;form.reset();form.elements.direction.value=direction;form.elements.date.value=today();updateCategories();
+  form.querySelector(".submit-entry").textContent="Bejegyzés mentése";$("#cancelEdit").hidden=true;
+}
+function editOwnEntry(id) {
+  const item=entries().find(entry=>entry.id===id&&entry.leader===session?.name);if(!item)return;
+  editingId=item.id;form.elements.direction.value=item.direction;updateCategories();
+  if(![...$("#categorySelect").options].some(option=>option.value===item.category))$("#categorySelect").add(new Option(item.category,item.category));
+  $("#categorySelect").value=item.category;updatePartnerField();
+  form.elements.date.value=item.date;form.elements.designation.value=item.designation||"";form.elements.amount.value=item.amount;
+  $("#partnerField").value=item.partner||"";$("#addressField").value=item.address||"";form.elements.note.value=item.note||"";$("#receiptField").value=item.receipt||"";
+  form.querySelector(".submit-entry").textContent="Módosítás mentése";$("#cancelEdit").hidden=false;$("#entryForm").scrollIntoView({behavior:"smooth",block:"start"});
+}
+
 populateLeaders(); updateCategories(); form.elements.date.value=today();
 $("#profileSelect").addEventListener("change",e=>$("#enterButton").disabled=!e.target.value);
 $("#profileDropdownButton").addEventListener("click",()=>{const menu=$("#profileButtons"),willOpen=menu.hidden;menu.hidden=!willOpen;$("#profileDropdownButton").setAttribute("aria-expanded",String(willOpen));});
@@ -105,12 +121,14 @@ $("#managerStatsTab").addEventListener("click",()=>{managerView="statistics";$("
 $("#managerEntryTab").addEventListener("click",()=>{managerView="own";$("#adminPanel").hidden=true;$("#workerPanel").hidden=false;$("#managerEntryTab").classList.add("active");$("#managerStatsTab").classList.remove("active");render();});
 $("#switchUser").addEventListener("click",switchUser); $("#homeLink").addEventListener("click",e=>{e.preventDefault();switchUser();});
 form.addEventListener("change",e=>{if(e.target.name==="direction")updateCategories();if(e.target.name==="category")updatePartnerField();});
-form.addEventListener("submit",e=>{e.preventDefault();if(!form.reportValidity())return;const data=Object.fromEntries(new FormData(form));const list=entries();list.push({id:crypto.randomUUID?.()||String(Date.now()),leader:session.name,direction:data.direction,category:data.category,designation:String(data.designation||"").trim(),receipt:String(data.receipt||"").trim(),date:data.date,amount:Number(data.amount),partner:String(data.partner||"").trim(),address:String(data.address||"").trim(),note:String(data.note||"").trim(),createdAt:new Date().toISOString()});saveEntries(list);const direction=data.direction;form.reset();form.elements.direction.value=direction;form.elements.date.value=today();updateCategories();$("#formStatus").textContent="✓ A bejegyzést elmentettük.";setTimeout(()=>$("#formStatus").textContent="",2500);render();});
+form.addEventListener("submit",e=>{e.preventDefault();if(!form.reportValidity())return;const data=Object.fromEntries(new FormData(form)),list=entries(),existingIndex=editingId?list.findIndex(item=>item.id===editingId&&item.leader===session.name):-1;const record={id:existingIndex>=0?list[existingIndex].id:(crypto.randomUUID?.()||String(Date.now())),leader:session.name,direction:data.direction,category:data.category,designation:String(data.designation||"").trim(),receipt:String(data.receipt||"").trim(),date:data.date,amount:Number(data.amount),partner:String(data.partner||"").trim(),address:String(data.address||"").trim(),note:String(data.note||"").trim(),createdAt:existingIndex>=0?list[existingIndex].createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()};if(existingIndex>=0)list[existingIndex]=record;else list.push(record);saveEntries(list);const wasEditing=existingIndex>=0,direction=data.direction;resetEntryEditor(direction);$("#formStatus").textContent=wasEditing?"✓ A módosítást elmentettük.":"✓ A bejegyzést elmentettük.";setTimeout(()=>$("#formStatus").textContent="",2500);render();});
+$("#cancelEdit").addEventListener("click",()=>resetEntryEditor(form.elements.direction.value));
+$("#recentEntries").addEventListener("click",e=>{const editButton=e.target.closest("[data-edit-own]"),deleteButton=e.target.closest("[data-delete-own]");if(editButton)editOwnEntry(editButton.dataset.editOwn);if(deleteButton){const item=entries().find(entry=>entry.id===deleteButton.dataset.deleteOwn&&entry.leader===session?.name);if(!item)return;pendingDeleteId=item.id;$("#confirmDialog").showModal();}});
 [$("#filterFrom"),$("#filterTo"),$("#filterLeader")].forEach(el=>el.addEventListener("change",render)); $("#filterText").addEventListener("input",render);
 $("#clearFilters").addEventListener("click",()=>{$("#filterFrom").value="";$("#filterTo").value="";$("#filterLeader").value="";$("#filterText").value="";render();});
 $("#entriesTable").addEventListener("click",e=>{const button=e.target.closest("[data-delete]");if(!button)return;pendingDeleteId=button.dataset.delete;$("#confirmDialog").showModal();});
 $("#confirmDelete").addEventListener("click",()=>{if(!pendingDeleteId)return;saveEntries(entries().filter(x=>x.id!==pendingDeleteId));pendingDeleteId=null;render();});
-$("#exportButton").addEventListener("click",exportCSV); $("#showAllOwn").addEventListener("click",()=>$("#recentEntries").scrollIntoView({behavior:"smooth"}));
+$("#exportButton").addEventListener("click",exportCSV); $("#showAllOwn").addEventListener("click",()=>{showAllOwnEntries=!showAllOwnEntries;render();$("#recentEntries").scrollIntoView({behavior:"smooth",block:"start"});});
 const isInstalled=()=>window.matchMedia("(display-mode: standalone)").matches||window.navigator.standalone===true;
 let installPrompt;
 function syncInstallButton(){$("#installButton").hidden=isInstalled();}
