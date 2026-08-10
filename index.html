@@ -64,11 +64,13 @@
               <label class="type-option expense-option"><input type="radio" name="direction" value="expense"><span class="type-icon">−</span><b>Kiadás</b><small>Pénzt adtam ki</small></label>
             </fieldset>
             <div class="form-grid">
-              <label class="field"><span>Kategória</span><select name="category" id="categorySelect" required></select></label>
               <label class="field"><span>Dátum</span><input name="date" type="date" required></label>
+              <label class="field"><span id="categoryLabel">Bevétel típusa</span><select name="category" id="categorySelect" required></select></label>
+              <label class="field full"><span>Megnevezés</span><input name="designation" required></label>
               <label class="field amount-field"><span>Összeg</span><div><input name="amount" type="number" min="1" step="1" inputmode="numeric" required><b>Ft</b></div></label>
-              <label class="field"><span>Ügyfél / munkatárs / beszerzés</span><input name="partner" autocomplete="organization"></label>
-              <label class="field full"><span>Cím vagy működési költség</span><input name="address" autocomplete="street-address"></label>
+              <label id="receiptFieldWrap" class="field" hidden><span>Bizonylat</span><select id="receiptField" name="receipt" disabled><option value="">Válassz…</option><option>Számlás</option><option>Nem számlás</option></select></label>
+              <label id="partnerFieldWrap" class="field"><span id="partnerLabel">Ügyfél neve</span><input id="partnerField" name="partner" autocomplete="organization" required></label>
+              <label id="addressFieldWrap" class="field full"><span>Ügyfél címe</span><input id="addressField" name="address" autocomplete="street-address" required></label>
               <label class="field full"><span>Megjegyzés</span><textarea name="note" rows="2"></textarea></label>
             </div>
             <button class="button button-primary submit-entry" type="submit">Bejegyzés mentése</button>
