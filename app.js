@@ -38,18 +38,26 @@ function updatePartnerField() {
   const category=$("#categorySelect").value;
   const coworker=category.includes("munkatárstól")||category.includes("munkatársnak");
   const operating=direction==="expense"&&category==="Működési költség";
-  const customer=!coworker&&!operating;
-  $("#categoryLabel").textContent=direction==="income"?"Bevétel típusa":"Kategória";
+  const coworkerTransfer=direction==="expense"&&category==="Pénzátadás – munkatársnak";
+  const incomeFromCustomer=direction==="income"&&category==="Bevétel – ügyféltől";
+  const customerAddress=direction==="expense"&&category==="Ügyfélkiadás";
+  $("#categoryLabel").textContent=direction==="income"?"Bevétel típusa":"Kiadás típusa";
   $("#partnerLabel").textContent=coworker?"Munkatárs neve":"Ügyfél neve";
   $("#partnerFieldWrap").hidden=operating;
   $("#partnerField").disabled=operating;
   $("#partnerField").required=!operating;
-  $("#addressFieldWrap").hidden=!customer;
-  $("#addressField").disabled=!customer;
-  $("#addressField").required=customer;
-  $("#receiptFieldWrap").hidden=direction!=="expense";
-  $("#receiptField").disabled=direction!=="expense";
-  $("#receiptField").required=direction==="expense";
+  $("#designationFieldWrap").hidden=incomeFromCustomer||coworkerTransfer;
+  $("#designationField").disabled=incomeFromCustomer||coworkerTransfer;
+  $("#designationField").required=!incomeFromCustomer&&!coworkerTransfer;
+  $("#addressFieldWrap").hidden=!customerAddress;
+  $("#addressField").disabled=!customerAddress;
+  $("#addressField").required=customerAddress;
+  $("#receiptFieldWrap").hidden=direction!=="expense"||coworkerTransfer;
+  $("#receiptField").disabled=direction!=="expense"||coworkerTransfer;
+  $("#receiptField").required=direction==="expense"&&!coworkerTransfer;
+  $("#transferTypeWrap").hidden=!coworkerTransfer;
+  $("#transferTypeField").disabled=!coworkerTransfer;
+  $("#transferTypeField").required=coworkerTransfer;
 }
 function openApp(nextSession) {
   session=nextSession; localStorage.setItem(SESSION_KEY,JSON.stringify(session));
@@ -70,7 +78,7 @@ function filteredEntries() {
   let list=entries();
   if(session?.role!=="admin"&&session?.role!=="manager") return list.filter(item=>item.leader===session.name);
   const from=$("#filterFrom").value,to=$("#filterTo").value,leader=$("#filterLeader").value,q=$("#filterText").value.trim().toLocaleLowerCase("hu");
-  return list.filter(item=>(!from||item.date>=from)&&(!to||item.date<=to)&&(!leader||item.leader===leader)&&(!q||[item.designation,item.partner,item.address,item.note,item.category,item.receipt].join(" ").toLocaleLowerCase("hu").includes(q)));
+  return list.filter(item=>(!from||item.date>=from)&&(!to||item.date<=to)&&(!leader||item.leader===leader)&&(!q||[item.designation,item.partner,item.address,item.note,item.category,item.receipt,item.transferType].join(" ").toLocaleLowerCase("hu").includes(q)));
 }
 function totals(list) {
   return list.reduce((acc,item)=>{acc[item.direction]+=Number(item.amount);return acc;},{income:0,expense:0});
@@ -82,17 +90,17 @@ function renderRecent(list) {
   const target=$("#recentEntries"),sorted=[...list].sort((a,b)=>b.createdAt.localeCompare(a.createdAt)),recent=showAllOwnEntries?sorted:sorted.slice(0,6);
   const ownTotal=totals(list);$("#ownCashValue").textContent=money(ownTotal.income-ownTotal.expense);
   $("#showAllOwn").hidden=sorted.length<=6;$("#showAllOwn").textContent=showAllOwnEntries?"Legutóbbi tételek":"Összes saját tétel";
-  target.innerHTML=recent.length?recent.map(item=>`<div class="entry-item"><span class="entry-symbol ${item.direction}">${item.direction==="income"?"+":"−"}</span><span class="entry-info"><b>${escapeHTML(item.designation||item.partner||item.category)}</b><small>${formatDate(item.date)} · ${escapeHTML(item.category)}${item.receipt?` · ${escapeHTML(item.receipt)}`:""}</small></span><span class="entry-side"><span class="entry-amount ${item.direction}">${item.direction==="income"?"+":"−"}${money(item.amount)}</span><span class="entry-actions"><button class="entry-action" type="button" data-edit-own="${item.id}" aria-label="Szerkesztés">✎</button><button class="entry-action delete" type="button" data-delete-own="${item.id}" aria-label="Törlés">✕</button></span></span></div>`).join(""):`<div class="empty-list">Nincs bejegyzés</div>`;
+  target.innerHTML=recent.length?recent.map(item=>`<div class="entry-item"><span class="entry-symbol ${item.direction}">${item.direction==="income"?"+":"−"}</span><span class="entry-info"><b>${escapeHTML(item.designation||item.transferType||item.partner||item.category)}</b><small>${formatDate(item.date)} · ${escapeHTML(item.category)}${item.transferType?` · ${escapeHTML(item.transferType)}`:""}${item.receipt?` · ${escapeHTML(item.receipt)}`:""}</small></span><span class="entry-side"><span class="entry-amount ${item.direction}">${item.direction==="income"?"+":"−"}${money(item.amount)}</span><span class="entry-actions"><button class="entry-action" type="button" data-edit-own="${item.id}" aria-label="Szerkesztés">✎</button><button class="entry-action delete" type="button" data-delete-own="${item.id}" aria-label="Törlés">✕</button></span></span></div>`).join(""):`<div class="empty-list">Nincs bejegyzés</div>`;
 }
 function renderTable(list) {
   const sorted=[...list].sort((a,b)=>b.date.localeCompare(a.date)||b.createdAt.localeCompare(a.createdAt));
-  $("#entriesTable").innerHTML=sorted.map(item=>`<tr><td>${formatDate(item.date)}</td><td><b>${escapeHTML(item.leader)}</b></td><td><span class="type-pill ${item.direction}">${item.direction==="income"?"Bevétel":"Kiadás"}</span></td><td><b>${escapeHTML(item.designation||item.partner||"–")}</b><br><small>${escapeHTML([item.partner,item.address,item.note].filter(Boolean).join(" · "))}</small></td><td>${escapeHTML(item.category)}${item.receipt?`<br><small>${escapeHTML(item.receipt)}</small>`:""}</td><td class="number"><b>${item.direction==="income"?"+":"−"}${money(item.amount)}</b></td><td><button class="delete-row" data-delete="${item.id}" title="Törlés">✕</button></td></tr>`).join("");
+  $("#entriesTable").innerHTML=sorted.map(item=>`<tr><td>${formatDate(item.date)}</td><td><b>${escapeHTML(item.leader)}</b></td><td><span class="type-pill ${item.direction}">${item.direction==="income"?"Bevétel":"Kiadás"}</span></td><td><b>${escapeHTML(item.designation||item.transferType||item.partner||"–")}</b><br><small>${escapeHTML([item.partner,item.address,item.note].filter(Boolean).join(" · "))}</small></td><td>${escapeHTML(item.category)}${item.transferType?`<br><small>${escapeHTML(item.transferType)}</small>`:""}${item.receipt?`<br><small>${escapeHTML(item.receipt)}</small>`:""}</td><td class="number"><b>${item.direction==="income"?"+":"−"}${money(item.amount)}</b></td><td><button class="delete-row" data-delete="${item.id}" title="Törlés">✕</button></td></tr>`).join("");
   $("#emptyTable").hidden=sorted.length>0;
 }
 function render() { if(!session)return; const list=filteredEntries(); if(session.role==="admin"){renderSummary(list);renderTable(list);}else if(session.role==="manager"){const own=entries().filter(item=>item.leader===session.name);renderSummary(managerView==="own"?own:list);renderRecent(own);renderTable(list);$("#balanceLabel").textContent=managerView==="own"?"Kasszámban":"Teljes kassza";}else{renderSummary(list);renderRecent(list);$("#balanceLabel").textContent="Kasszámban";} }
 
 function exportCSV() {
-  const rows=[["Dátum","Csoportvezető","Típus","Kategória","Megnevezés","Bizonylat","Összeg (Ft)","Ügyfél / munkatárs","Ügyfél címe","Megjegyzés"],...filteredEntries().map(x=>[x.date,x.leader,x.direction==="income"?"Bevétel":"Kiadás",x.category,x.designation,x.receipt,x.amount,x.partner,x.address,x.note])];
+  const rows=[["Dátum","Csoportvezető","Típus","Kategória","Pénzátadás típusa","Megnevezés","Bizonylat","Összeg (Ft)","Ügyfél / munkatárs","Ügyfél címe","Megjegyzés"],...filteredEntries().map(x=>[x.date,x.leader,x.direction==="income"?"Bevétel":"Kiadás",x.category,x.transferType,x.designation,x.receipt,x.amount,x.partner,x.address,x.note])];
   const csv="\ufeff"+rows.map(row=>row.map(cell=>`"${String(cell??"").replaceAll('"','""')}"`).join(";")).join("\r\n");
   const url=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"})),a=document.createElement("a"); a.href=url;a.download=`kassza-${today()}.csv`;a.click();URL.revokeObjectURL(url);
 }
@@ -107,7 +115,7 @@ function editOwnEntry(id) {
   if(![...$("#categorySelect").options].some(option=>option.value===item.category))$("#categorySelect").add(new Option(item.category,item.category));
   $("#categorySelect").value=item.category;updatePartnerField();
   form.elements.date.value=item.date;form.elements.designation.value=item.designation||"";form.elements.amount.value=item.amount;
-  $("#partnerField").value=item.partner||"";$("#addressField").value=item.address||"";form.elements.note.value=item.note||"";$("#receiptField").value=item.receipt||"";
+  $("#partnerField").value=item.partner||"";$("#addressField").value=item.address||"";form.elements.note.value=item.note||"";$("#receiptField").value=item.receipt||"";$("#transferTypeField").value=item.transferType||"";
   form.querySelector(".submit-entry").textContent="Módosítás mentése";$("#cancelEdit").hidden=false;$("#entryForm").scrollIntoView({behavior:"smooth",block:"start"});
 }
 
@@ -121,7 +129,7 @@ $("#managerStatsTab").addEventListener("click",()=>{managerView="statistics";$("
 $("#managerEntryTab").addEventListener("click",()=>{managerView="own";$("#adminPanel").hidden=true;$("#workerPanel").hidden=false;$("#managerEntryTab").classList.add("active");$("#managerStatsTab").classList.remove("active");render();});
 $("#switchUser").addEventListener("click",switchUser); $("#homeLink").addEventListener("click",e=>{e.preventDefault();switchUser();});
 form.addEventListener("change",e=>{if(e.target.name==="direction")updateCategories();if(e.target.name==="category")updatePartnerField();});
-form.addEventListener("submit",e=>{e.preventDefault();if(!form.reportValidity())return;const data=Object.fromEntries(new FormData(form)),list=entries(),existingIndex=editingId?list.findIndex(item=>item.id===editingId&&item.leader===session.name):-1;const record={id:existingIndex>=0?list[existingIndex].id:(crypto.randomUUID?.()||String(Date.now())),leader:session.name,direction:data.direction,category:data.category,designation:String(data.designation||"").trim(),receipt:String(data.receipt||"").trim(),date:data.date,amount:Number(data.amount),partner:String(data.partner||"").trim(),address:String(data.address||"").trim(),note:String(data.note||"").trim(),createdAt:existingIndex>=0?list[existingIndex].createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()};if(existingIndex>=0)list[existingIndex]=record;else list.push(record);saveEntries(list);const wasEditing=existingIndex>=0,direction=data.direction;resetEntryEditor(direction);$("#formStatus").textContent=wasEditing?"✓ A módosítást elmentettük.":"✓ A bejegyzést elmentettük.";setTimeout(()=>$("#formStatus").textContent="",2500);render();});
+form.addEventListener("submit",e=>{e.preventDefault();if(!form.reportValidity())return;const data=Object.fromEntries(new FormData(form)),list=entries(),existingIndex=editingId?list.findIndex(item=>item.id===editingId&&item.leader===session.name):-1;const record={id:existingIndex>=0?list[existingIndex].id:(crypto.randomUUID?.()||String(Date.now())),leader:session.name,direction:data.direction,category:data.category,transferType:String(data.transferType||"").trim(),designation:String(data.designation||"").trim(),receipt:String(data.receipt||"").trim(),date:data.date,amount:Number(data.amount),partner:String(data.partner||"").trim(),address:String(data.address||"").trim(),note:String(data.note||"").trim(),createdAt:existingIndex>=0?list[existingIndex].createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()};if(existingIndex>=0)list[existingIndex]=record;else list.push(record);saveEntries(list);const wasEditing=existingIndex>=0,direction=data.direction;resetEntryEditor(direction);$("#formStatus").textContent=wasEditing?"✓ A módosítást elmentettük.":"✓ A bejegyzést elmentettük.";setTimeout(()=>$("#formStatus").textContent="",2500);render();});
 $("#cancelEdit").addEventListener("click",()=>resetEntryEditor(form.elements.direction.value));
 $("#recentEntries").addEventListener("click",e=>{const editButton=e.target.closest("[data-edit-own]"),deleteButton=e.target.closest("[data-delete-own]");if(editButton)editOwnEntry(editButton.dataset.editOwn);if(deleteButton){const item=entries().find(entry=>entry.id===deleteButton.dataset.deleteOwn&&entry.leader===session?.name);if(!item)return;pendingDeleteId=item.id;$("#confirmDialog").showModal();}});
 [$("#filterFrom"),$("#filterTo"),$("#filterLeader")].forEach(el=>el.addEventListener("change",render)); $("#filterText").addEventListener("input",render);
