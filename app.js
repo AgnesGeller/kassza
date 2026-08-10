@@ -1,10 +1,10 @@
 const STORAGE_KEY = "diszkertek-kassza-v1";
 const SESSION_KEY = "diszkertek-kassza-session-v1";
-const LEADERS = ["Ádám", "Ági", "Attila", "Bendegúz", "Gábor", "Gyula", "Marci", "Márk", "Tamás"];
+const LEADERS = ["Ági", "Bendegúz", "Marci", "Márk", "Tamás"];
 const MANAGERS = ["Ági", "Tamás"];
 const CATEGORIES = {
   income: ["Bevétel – ügyféltől", "Pénzátvétel – munkatárstól", "Kasszafeltöltés"],
-  expense: ["Ügyfélhez kapcsolódó kiadás", "Pénzátadás – munkatársnak", "Anyagbeszerzés"]
+  expense: ["Számlás", "Nem számlás", "Ügyfélhez kapcsolódó kiadás", "Pénzátadás – munkatársnak", "Anyagbeszerzés"]
 };
 
 const $ = selector => document.querySelector(selector);
