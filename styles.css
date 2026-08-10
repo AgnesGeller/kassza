@@ -20,3 +20,8 @@
 @media(max-width:540px){.welcome-logo{width:min(175px,58%);margin-bottom:10px}.welcome>h1{margin-bottom:18px}.profile-menu{max-height:220px}.profile-button,.manager-tab,.app-actions .button,.user-menu button{min-height:44px}}
 @media(max-width:540px){.profile-menu{max-height:195px}}
 .own-balance{display:flex;align-items:center;justify-content:space-between;gap:15px;margin:18px 0 20px;padding:16px 17px;border-radius:14px;color:#fff;background:var(--forest)}.own-balance span{font-size:13px;font-weight:750}.own-balance strong{font:600 24px Georgia,serif;white-space:nowrap}.own-balance+.entry-list{margin-top:0}
+@media(max-width:540px){.welcome{justify-content:flex-start;min-height:100svh;padding-top:18px}.welcome-logo{width:min(140px,48%);margin-bottom:6px}.welcome h1{font-size:42px}.welcome>h1{margin-bottom:15px}.welcome:before{top:8px;height:535px}}
+.title-with-update{display:flex;align-items:center;gap:14px;flex-wrap:wrap}.update-button{min-height:40px;padding:9px 15px;color:#173128;background:#f4b942;box-shadow:0 7px 18px rgba(180,116,13,.24)}.update-button:hover{background:#ffc95e}.update-button:disabled{opacity:.7}.title-with-update .update-success{color:#164f3a!important;background:#dcefe2}.title-with-update .update-error{color:#fff!important;background:#a84c45}
+@media(max-width:540px){.title-with-update{gap:9px}.title-with-update .update-button{min-height:42px;padding:8px 12px;font-size:12px}.app-actions{display:flex;width:auto;margin-top:12px}}
+.mobile-update{display:none}
+@media(max-width:540px){.mobile-update{display:inline-block}.desktop-update{display:none}.app-actions{grid-template-columns:1fr}}
