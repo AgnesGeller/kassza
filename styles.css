@@ -19,3 +19,4 @@
 .admin-panel{grid-template-columns:minmax(0,1fr);min-width:0}.admin-panel>.card,.table-card,.filter-card{min-width:0}.table-wrap{min-width:0;max-width:calc(100% + 20px)}
 @media(max-width:540px){.welcome-logo{width:min(175px,58%);margin-bottom:10px}.welcome>h1{margin-bottom:18px}.profile-menu{max-height:220px}.profile-button,.manager-tab,.app-actions .button,.user-menu button{min-height:44px}}
 @media(max-width:540px){.profile-menu{max-height:195px}}
+.own-balance{display:flex;align-items:center;justify-content:space-between;gap:15px;margin:18px 0 20px;padding:16px 17px;border-radius:14px;color:#fff;background:var(--forest)}.own-balance span{font-size:13px;font-weight:750}.own-balance strong{font:600 24px Georgia,serif;white-space:nowrap}.own-balance+.entry-list{margin-top:0}

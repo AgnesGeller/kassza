@@ -11,6 +11,7 @@ const $ = selector => document.querySelector(selector);
 const welcomeView = $("#welcomeView"), appView = $("#appView"), form = $("#entryForm");
 let session = readJSON(SESSION_KEY, null);
 let pendingDeleteId = null;
+let managerView = "statistics";
 
 function readJSON(key, fallback) { try { return JSON.parse(localStorage.getItem(key)) ?? fallback; } catch (_) { return fallback; } }
 function entries() { return readJSON(STORAGE_KEY, []); }
@@ -33,10 +34,12 @@ function openApp(nextSession) {
   session=nextSession; localStorage.setItem(SESSION_KEY,JSON.stringify(session));
   welcomeView.hidden=true; appView.hidden=false;
   const admin=session.role==="admin",manager=session.role==="manager",hasStatistics=admin||manager;
+  managerView="statistics";
   $("#managerTabs").hidden=!manager;
   $("#workerPanel").hidden=admin||manager; $("#adminPanel").hidden=!hasStatistics;
   $("#managerStatsTab").classList.toggle("active",manager);
   $("#managerEntryTab").classList.remove("active");
+  $("#balanceLabel").textContent=hasStatistics?"Teljes kassza":"Kasszámban";
   $("#activeUser").textContent=admin?"Munkáltató":manager?`${session.name} · teljes nézet`:session.name;
   $("#viewEyebrow").textContent=hasStatistics?"TELJES ÁTTEKINTÉS":"MAI KASSZA";
   $("#viewTitle").textContent=admin?"Kassza áttekintő":manager?`Szia, ${session.name}!`:`Szia, ${session.name}!`;
@@ -57,6 +60,7 @@ function renderSummary(list) {
 }
 function renderRecent(list) {
   const target=$("#recentEntries"),recent=[...list].sort((a,b)=>b.createdAt.localeCompare(a.createdAt)).slice(0,6);
+  const ownTotal=totals(list);$("#ownCashValue").textContent=money(ownTotal.income-ownTotal.expense);
   target.innerHTML=recent.length?recent.map(item=>`<div class="entry-item"><span class="entry-symbol ${item.direction}">${item.direction==="income"?"+":"−"}</span><span class="entry-info"><b>${escapeHTML(item.partner||item.category)}</b><small>${formatDate(item.date)} · ${escapeHTML(item.category)}</small></span><span class="entry-amount ${item.direction}">${item.direction==="income"?"+":"−"}${money(item.amount)}</span></div>`).join(""):`<div class="empty-list">Nincs bejegyzés</div>`;
 }
 function renderTable(list) {
@@ -64,7 +68,7 @@ function renderTable(list) {
   $("#entriesTable").innerHTML=sorted.map(item=>`<tr><td>${formatDate(item.date)}</td><td><b>${escapeHTML(item.leader)}</b></td><td><span class="type-pill ${item.direction}">${item.direction==="income"?"Bevétel":"Kiadás"}</span></td><td><b>${escapeHTML(item.partner||"–")}</b><br><small>${escapeHTML(item.address||item.note||"")}</small></td><td>${escapeHTML(item.category)}</td><td class="number"><b>${item.direction==="income"?"+":"−"}${money(item.amount)}</b></td><td><button class="delete-row" data-delete="${item.id}" title="Törlés">✕</button></td></tr>`).join("");
   $("#emptyTable").hidden=sorted.length>0;
 }
-function render() { if(!session)return; const list=filteredEntries(); renderSummary(list); if(session.role==="admin")renderTable(list); else if(session.role==="manager"){renderRecent(entries().filter(item=>item.leader===session.name));renderTable(list);}else renderRecent(list); }
+function render() { if(!session)return; const list=filteredEntries(); if(session.role==="admin"){renderSummary(list);renderTable(list);}else if(session.role==="manager"){const own=entries().filter(item=>item.leader===session.name);renderSummary(managerView==="own"?own:list);renderRecent(own);renderTable(list);$("#balanceLabel").textContent=managerView==="own"?"Kasszámban":"Teljes kassza";}else{renderSummary(list);renderRecent(list);$("#balanceLabel").textContent="Kasszámban";} }
 
 function exportCSV() {
   const rows=[["Dátum","Csoportvezető","Típus","Kategória","Összeg (Ft)","Ügyfél / munkatárs","Cím / költség","Megjegyzés"],...filteredEntries().map(x=>[x.date,x.leader,x.direction==="income"?"Bevétel":"Kiadás",x.category,x.amount,x.partner,x.address,x.note])];
@@ -78,8 +82,8 @@ $("#profileDropdownButton").addEventListener("click",()=>{const menu=$("#profile
 $("#profileButtons").addEventListener("click",e=>{const button=e.target.closest("[data-profile]");if(!button)return;$("#profileSelect").value=button.dataset.profile;$("#selectedProfileName").textContent=button.dataset.profile;$("#profileButtons").querySelectorAll(".profile-button").forEach(item=>item.classList.toggle("active",item===button));$("#profileButtons").hidden=true;$("#profileDropdownButton").setAttribute("aria-expanded","false");$("#enterButton").disabled=false;});
 document.addEventListener("click",e=>{if(!e.target.closest(".profile-dropdown")){$("#profileButtons").hidden=true;$("#profileDropdownButton").setAttribute("aria-expanded","false");}});
 $("#enterButton").addEventListener("click",()=>{const name=$("#profileSelect").value;openApp({role:MANAGERS.includes(name)?"manager":"worker",name});});
-$("#managerStatsTab").addEventListener("click",()=>{$("#workerPanel").hidden=true;$("#adminPanel").hidden=false;$("#managerStatsTab").classList.add("active");$("#managerEntryTab").classList.remove("active");});
-$("#managerEntryTab").addEventListener("click",()=>{$("#adminPanel").hidden=true;$("#workerPanel").hidden=false;$("#managerEntryTab").classList.add("active");$("#managerStatsTab").classList.remove("active");});
+$("#managerStatsTab").addEventListener("click",()=>{managerView="statistics";$("#workerPanel").hidden=true;$("#adminPanel").hidden=false;$("#managerStatsTab").classList.add("active");$("#managerEntryTab").classList.remove("active");render();});
+$("#managerEntryTab").addEventListener("click",()=>{managerView="own";$("#adminPanel").hidden=true;$("#workerPanel").hidden=false;$("#managerEntryTab").classList.add("active");$("#managerStatsTab").classList.remove("active");render();});
 $("#switchUser").addEventListener("click",switchUser); $("#homeLink").addEventListener("click",e=>{e.preventDefault();switchUser();});
 form.addEventListener("change",e=>{if(e.target.name==="direction")updateCategories();});
 form.addEventListener("submit",e=>{e.preventDefault();if(!form.reportValidity())return;const data=Object.fromEntries(new FormData(form));const list=entries();list.push({id:crypto.randomUUID?.()||String(Date.now()),leader:session.name,direction:data.direction,category:data.category,date:data.date,amount:Number(data.amount),partner:data.partner.trim(),address:data.address.trim(),note:data.note.trim(),createdAt:new Date().toISOString()});saveEntries(list);const direction=data.direction;form.reset();form.elements.direction.value=direction;form.elements.date.value=today();updateCategories();$("#formStatus").textContent="✓ A bejegyzést elmentettük.";setTimeout(()=>$("#formStatus").textContent="",2500);render();});
