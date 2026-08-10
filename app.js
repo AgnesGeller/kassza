@@ -3,8 +3,8 @@ const SESSION_KEY = "diszkertek-kassza-session-v1";
 const LEADERS = ["Ági", "Bendegúz", "Marci", "Márk", "Tamás"];
 const MANAGERS = ["Ági", "Tamás"];
 const CATEGORIES = {
-  income: ["Bevétel – ügyféltől", "Pénzátvétel – munkatárstól"],
-  expense: ["Működési költség", "Ügyfélkiadás", "Pénzátadás – munkatársnak"]
+  income: ["Bevétel – ügyféltől", "Pénzátvétel – munkatárstól", "Egyéb"],
+  expense: ["Működési költség", "Ügyfélkiadás", "Pénzátadás – munkatársnak", "Egyéb"]
 };
 
 const $ = selector => document.querySelector(selector);
@@ -14,6 +14,7 @@ let pendingDeleteId = null;
 let managerView = "statistics";
 let editingId = null;
 let showAllOwnEntries = false;
+let weekOffset = 0;
 
 function readJSON(key, fallback) { try { return JSON.parse(localStorage.getItem(key)) ?? fallback; } catch (_) { return fallback; } }
 function entries() { return readJSON(STORAGE_KEY, []); }
@@ -21,6 +22,8 @@ function saveEntries(items) { localStorage.setItem(STORAGE_KEY, JSON.stringify(i
 function today() { const d=new Date(), off=d.getTimezoneOffset(); return new Date(d.getTime()-off*60000).toISOString().slice(0,10); }
 function money(value) { return new Intl.NumberFormat("hu-HU",{style:"currency",currency:"HUF",maximumFractionDigits:0}).format(Number(value)||0); }
 function formatDate(value) { if(!value)return ""; return new Intl.DateTimeFormat("hu-HU").format(new Date(`${value}T12:00:00`)); }
+function isoDate(date){const year=date.getFullYear(),month=String(date.getMonth()+1).padStart(2,"0"),day=String(date.getDate()).padStart(2,"0");return `${year}-${month}-${day}`;}
+function selectedWeek(){const base=new Date(),distance=(base.getDay()+2)%7;const start=new Date(base.getFullYear(),base.getMonth(),base.getDate()-distance+weekOffset*7),end=new Date(start.getFullYear(),start.getMonth(),start.getDate()+6);return {start,end,startISO:isoDate(start),endISO:isoDate(end)};}
 function escapeHTML(value) { return String(value??"").replace(/[&<>'"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"}[c])); }
 
 function populateLeaders() {
@@ -40,24 +43,31 @@ function updatePartnerField() {
   const operating=direction==="expense"&&category==="Működési költség";
   const coworkerTransfer=direction==="expense"&&category==="Pénzátadás – munkatársnak";
   const incomeFromCustomer=direction==="income"&&category==="Bevétel – ügyféltől";
-  const customerAddress=direction==="expense"&&category==="Ügyfélkiadás";
+  const incomeFromCoworker=direction==="income"&&category==="Pénzátvétel – munkatárstól";
+  const otherIncome=direction==="income"&&category==="Egyéb";
+  const otherExpense=direction==="expense"&&category==="Egyéb";
+  const otherEntry=otherIncome||otherExpense;
+  const customerExpense=direction==="expense"&&category==="Ügyfélkiadás";
   $("#categoryLabel").textContent=direction==="income"?"Bevétel típusa":"Kiadás típusa";
   $("#partnerLabel").textContent=coworker?"Munkatárs neve":"Ügyfél neve";
-  $("#partnerFieldWrap").hidden=operating;
-  $("#partnerField").disabled=operating;
-  $("#partnerField").required=!operating;
-  $("#designationFieldWrap").hidden=incomeFromCustomer||coworkerTransfer;
-  $("#designationField").disabled=incomeFromCustomer||coworkerTransfer;
-  $("#designationField").required=!incomeFromCustomer&&!coworkerTransfer;
-  $("#addressFieldWrap").hidden=!customerAddress;
-  $("#addressField").disabled=!customerAddress;
-  $("#addressField").required=customerAddress;
-  $("#receiptFieldWrap").hidden=direction!=="expense"||coworkerTransfer;
-  $("#receiptField").disabled=direction!=="expense"||coworkerTransfer;
-  $("#receiptField").required=direction==="expense"&&!coworkerTransfer;
+  $("#partnerFieldWrap").hidden=operating||otherIncome||otherExpense;
+  $("#partnerField").disabled=operating||otherIncome||otherExpense;
+  $("#partnerField").required=!operating&&!otherIncome&&!otherExpense;
+  $("#designationFieldWrap").hidden=incomeFromCustomer||incomeFromCoworker||coworkerTransfer;
+  $("#designationField").disabled=incomeFromCustomer||incomeFromCoworker||coworkerTransfer;
+  $("#designationField").required=!incomeFromCustomer&&!incomeFromCoworker&&!coworkerTransfer;
+  $("#addressFieldWrap").hidden=true;
+  $("#addressField").disabled=true;
+  $("#addressField").required=false;
+  $("#receiptFieldWrap").hidden=direction!=="expense"||coworkerTransfer||otherExpense;
+  $("#receiptField").disabled=direction!=="expense"||coworkerTransfer||otherExpense;
+  $("#receiptField").required=direction==="expense"&&!coworkerTransfer&&!otherExpense;
   $("#transferTypeWrap").hidden=!coworkerTransfer;
   $("#transferTypeField").disabled=!coworkerTransfer;
   $("#transferTypeField").required=coworkerTransfer;
+  $("#noteFieldWrap").hidden=customerExpense;
+  $("#noteField").disabled=customerExpense;
+  $("#noteField").required=otherEntry;
 }
 function openApp(nextSession) {
   session=nextSession; localStorage.setItem(SESSION_KEY,JSON.stringify(session));
@@ -73,7 +83,7 @@ function openApp(nextSession) {
   $("#viewTitle").textContent=admin?"Kassza áttekintő":`Szia, ${session.name}!`;
   render();
 }
-function switchUser() { resetEntryEditor();showAllOwnEntries=false;localStorage.removeItem(SESSION_KEY); session=null; appView.hidden=true; welcomeView.hidden=false; $("#profileSelect").value=""; $("#selectedProfileName").textContent="Név kiválasztása"; $("#profileButtons").hidden=true; $("#profileDropdownButton").setAttribute("aria-expanded","false"); $("#profileButtons").querySelectorAll(".profile-button").forEach(button=>button.classList.remove("active")); $("#enterButton").disabled=true; }
+function switchUser() { resetEntryEditor();showAllOwnEntries=false;weekOffset=0;localStorage.removeItem(SESSION_KEY); session=null; appView.hidden=true; welcomeView.hidden=false; $("#profileSelect").value=""; $("#selectedProfileName").textContent="Név kiválasztása"; $("#profileButtons").hidden=true; $("#profileDropdownButton").setAttribute("aria-expanded","false"); $("#profileButtons").querySelectorAll(".profile-button").forEach(button=>button.classList.remove("active")); $("#enterButton").disabled=true; }
 function filteredEntries() {
   let list=entries();
   if(session?.role!=="admin"&&session?.role!=="manager") return list.filter(item=>item.leader===session.name);
@@ -87,9 +97,10 @@ function renderSummary(list) {
   const sum=totals(list); $("#incomeValue").textContent=money(sum.income); $("#expenseValue").textContent=money(sum.expense); $("#balanceValue").textContent=money(sum.income-sum.expense);
 }
 function renderRecent(list) {
-  const target=$("#recentEntries"),sorted=[...list].sort((a,b)=>b.createdAt.localeCompare(a.createdAt)),recent=showAllOwnEntries?sorted:sorted.slice(0,6);
+  const target=$("#recentEntries"),week=selectedWeek(),weekly=list.filter(item=>item.date>=week.startISO&&item.date<=week.endISO),sorted=[...weekly].sort((a,b)=>b.date.localeCompare(a.date)||b.createdAt.localeCompare(a.createdAt)),recent=showAllOwnEntries?sorted:sorted.slice(0,6);
   const ownTotal=totals(list);$("#ownCashValue").textContent=money(ownTotal.income-ownTotal.expense);
-  $("#showAllOwn").hidden=sorted.length<=6;$("#showAllOwn").textContent=showAllOwnEntries?"Legutóbbi tételek":"Összes saját tétel";
+  const weekTotal=totals(weekly);$("#weekRange").textContent=`${formatDate(week.startISO)} – ${formatDate(week.endISO)}`;$("#weeklyIncome").textContent=money(weekTotal.income);$("#weeklyExpense").textContent=money(weekTotal.expense);$("#weeklyBalance").textContent=money(weekTotal.income-weekTotal.expense);$("#nextWeek").disabled=weekOffset>=0;
+  $("#showAllOwn").hidden=sorted.length<=6;$("#showAllOwn").textContent=showAllOwnEntries?"Kevesebb tétel":"Összes heti tétel";
   target.innerHTML=recent.length?recent.map(item=>`<div class="entry-item"><span class="entry-symbol ${item.direction}">${item.direction==="income"?"+":"−"}</span><span class="entry-info"><b>${escapeHTML(item.designation||item.transferType||item.partner||item.category)}</b><small>${formatDate(item.date)} · ${escapeHTML(item.category)}${item.transferType?` · ${escapeHTML(item.transferType)}`:""}${item.receipt?` · ${escapeHTML(item.receipt)}`:""}</small></span><span class="entry-side"><span class="entry-amount ${item.direction}">${item.direction==="income"?"+":"−"}${money(item.amount)}</span><span class="entry-actions"><button class="entry-action" type="button" data-edit-own="${item.id}" aria-label="Szerkesztés">✎</button><button class="entry-action delete" type="button" data-delete-own="${item.id}" aria-label="Törlés">✕</button></span></span></div>`).join(""):`<div class="empty-list">Nincs bejegyzés</div>`;
 }
 function renderTable(list) {
@@ -136,6 +147,8 @@ $("#recentEntries").addEventListener("click",e=>{const editButton=e.target.close
 $("#clearFilters").addEventListener("click",()=>{$("#filterFrom").value="";$("#filterTo").value="";$("#filterLeader").value="";$("#filterText").value="";render();});
 $("#entriesTable").addEventListener("click",e=>{const button=e.target.closest("[data-delete]");if(!button)return;pendingDeleteId=button.dataset.delete;$("#confirmDialog").showModal();});
 $("#confirmDelete").addEventListener("click",()=>{if(!pendingDeleteId)return;saveEntries(entries().filter(x=>x.id!==pendingDeleteId));pendingDeleteId=null;render();});
+$("#previousWeek").addEventListener("click",()=>{weekOffset--;showAllOwnEntries=false;render();});
+$("#nextWeek").addEventListener("click",()=>{if(weekOffset>=0)return;weekOffset++;showAllOwnEntries=false;render();});
 $("#exportButton").addEventListener("click",exportCSV); $("#showAllOwn").addEventListener("click",()=>{showAllOwnEntries=!showAllOwnEntries;render();$("#recentEntries").scrollIntoView({behavior:"smooth",block:"start"});});
 const isInstalled=()=>window.matchMedia("(display-mode: standalone)").matches||window.navigator.standalone===true;
 let installPrompt;
