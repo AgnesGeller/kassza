@@ -1,22 +1,27 @@
 # Díszkertek Kassza
 
-Különálló, mobilbarát PWA prototípus a csoportvezetők napi bevételeinek és kiadásainak rögzítésére.
+Önálló, mobilbarát, telepíthető PWA a csoportvezetők bevételeinek és kiadásainak kezelésére.
 
-## Helyi indítás
+## Funkciók
 
-```powershell
-python -m http.server 8081 -d kassza-app
-```
+- név + egyéni PIN-kódos belépés, megjegyzett munkamenet;
+- minden dolgozó csak a saját kasszáját látja;
+- Ági és Tamás teljes, szűrhető statisztikát lát és saját kasszát is vezethet;
+- bevételek, kiadások, szerkesztés és törlés;
+- automatikus kasszaegyenleg;
+- péntektől csütörtökig tartó heti bontás;
+- valós idejű, több készülék közötti Supabase-szinkronizálás;
+- szűrt CSV és teljes JSON biztonsági mentés;
+- telepítés és alkalmazáson belüli frissítés.
 
-Ezután nyisd meg: `http://localhost:8081`
+## Supabase
 
-## Bemutató használat
+Az adatbázis létrehozásának lépései a [`supabase/README.md`](supabase/README.md) fájlban találhatók. A böngészőbe kizárólag a nyilvános Project URL és publishable/anon kulcs kerülhet. A `service_role` kulcsot tilos GitHubra feltölteni.
 
-- A nyitóoldalon válassz csoportvezetőt. A kiválasztást a böngésző megjegyzi.
-- A munkáltatói felület bemutató kódja: `2026`.
-- A csoportvezető csak a saját tételeit látja, az admin minden tételben kereshet és CSV-t tölthet le.
-- A nevek az `app.js` elején, a `LEADERS` listában módosíthatók.
+## Telepítés
 
-## Fontos az első verzióról
+A GitHub Pages cím megnyitása után a **Telepítés** gombbal az app a telefon kezdőképernyőjére tehető. Új verziónál a **Frissítés** gomb tölti le a legutóbbi fájlokat.
 
-Ez a verzió helyi prototípus: az adatokat az adott böngésző `localStorage` tárhelyén menti. Emiatt több telefon között még nem szinkronizál élőben, és a bemutató admin kód nem valódi biztonsági védelem. Az éles, közös használathoz adatbázis, szerveroldali jogosultság és biztonságos admin hitelesítés szükséges. Ezeket az önálló GitHub projekt elkészülte után lehet bekötni anélkül, hogy a Munkalap apphoz hozzá kellene nyúlni.
+## Biztonsági mentés
+
+Ági és Tamás a **Teljes mentés** gombbal az összes elérhető adatot dátumozott JSON-fájlba mentheti, a **CSV mentés** pedig az aktuális szűrés eredményét tölti le. A mentéseket külön felhőmappában is érdemes megőrizni.

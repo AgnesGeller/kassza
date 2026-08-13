@@ -40,7 +40,9 @@
         <span id="profileButtons" class="profile-menu" role="listbox" aria-label="Név kiválasztása" hidden></span>
       </span>
     </label>
+    <label id="pinFieldWrap" class="field" hidden><span>PIN-kód</span><input id="pinField" type="password" inputmode="numeric" minlength="6" autocomplete="current-password" placeholder="••••••"></label>
     <button id="enterButton" class="button button-primary" type="button" disabled>Belépés</button>
+    <p id="loginStatus" class="form-status" role="status" aria-live="polite"></p>
   </section>
 
   <div id="appView" class="app" hidden>
@@ -107,7 +109,7 @@
           </div>
         </article>
         <article class="card table-card">
-          <div class="section-heading"><div><h2>Részletes lista</h2></div><button id="exportButton" class="button button-soft" type="button">CSV letöltése</button></div>
+          <div class="section-heading"><div><h2>Részletes lista</h2></div><div class="backup-actions"><button id="exportButton" class="button button-soft" type="button">CSV mentés</button><button id="backupButton" class="button button-soft" type="button">Teljes mentés</button></div></div>
           <div class="table-wrap"><table><thead><tr><th>Dátum</th><th>Csoportvezető</th><th>Típus</th><th>Ügyfél / részlet</th><th>Kategória</th><th class="number">Összeg</th><th></th></tr></thead><tbody id="entriesTable"></tbody></table></div>
           <div id="emptyTable" class="empty-state" hidden>Nincs a szűrésnek megfelelő bejegyzés.</div>
         </article>
@@ -118,6 +120,9 @@
   <dialog id="confirmDialog"><form method="dialog"><h2>Törlöd a bejegyzést?</h2><div class="dialog-actions"><button class="button button-soft" value="cancel">Mégse</button><button id="confirmDelete" class="button button-danger" value="default">Törlés</button></div></form></dialog>
   <dialog id="installHelpDialog"><form method="dialog"><button class="dialog-close" value="cancel" aria-label="Bezárás">×</button><p class="eyebrow">APP TELEPÍTÉSE</p><h2>Tedd a főképernyőre</h2><p><b>iPhone / iPad:</b> nyisd meg Safariban, koppints a Megosztás ikonra, majd válaszd a „Főképernyőhöz adás” lehetőséget.</p><p><b>Android:</b> nyisd meg Chrome-ban, majd a böngésző menüjében válaszd az „Alkalmazás telepítése” vagy „Hozzáadás a kezdőképernyőhöz” lehetőséget.</p><button class="button button-primary full-button" value="cancel">Rendben</button></form></dialog>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
+  <script src="supabase-data.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
