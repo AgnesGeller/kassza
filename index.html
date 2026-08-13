@@ -88,13 +88,13 @@
               <label id="designationFieldWrap" class="field full"><span>Megnevezés</span><input id="designationField" name="designation" required></label>
               <label class="field amount-field"><span>Összeg</span><div><input name="amount" type="text" inputmode="numeric" pattern="[1-9][0-9]*" autocomplete="off" required><b>Ft</b></div></label>
               <label id="receiptFieldWrap" class="field" hidden><span>Bizonylat</span><select id="receiptField" name="receipt" disabled><option value="">Válassz…</option><option>Számlás</option><option>Nem számlás</option></select></label>
-              <label id="invoicePhotoWrap" class="field full invoice-photo-field" hidden><span>Számla fotózása</span><input id="invoicePhoto" name="invoicePhoto" type="file" accept="image/*" capture="environment" disabled><small>A fotót az alkalmazás nem tárolja.</small></label>
+              <label id="invoicePhotoWrap" class="field full invoice-photo-field" hidden><span>Számla fotózása</span><input id="invoicePhoto" name="invoicePhoto" type="file" accept="image/*" capture="environment" disabled><small id="invoicePhotoHelp">A fotót az alkalmazás nem tárolja.</small></label>
               <label id="transferTypeWrap" class="field" hidden><span>Pénzátadás típusa</span><select id="transferTypeField" name="transferType" disabled><option value="">Válassz…</option><option>Fizetési előleg</option><option>Pénzátadás</option></select></label>
               <label id="partnerFieldWrap" class="field"><span id="partnerLabel">Ügyfél neve</span><input id="partnerField" name="partner" autocomplete="organization" required></label>
               <label id="addressFieldWrap" class="field full"><span>Ügyfél címe</span><input id="addressField" name="address" autocomplete="street-address"></label>
               <label id="noteFieldWrap" class="field full"><span>Megjegyzés</span><textarea id="noteField" name="note" rows="2"></textarea></label>
             </div>
-            <div class="entry-form-actions"><button class="button button-primary submit-entry" type="submit">Bejegyzés mentése</button><button id="cancelEdit" class="button button-soft" type="button" hidden>Szerkesztés megszakítása</button></div>
+            <div class="entry-form-actions"><button class="button button-primary submit-entry" type="submit">Bejegyzés mentése</button><button id="sendInvoicePhoto" class="button button-viber" type="button" hidden>Számlafotó küldése Viberre</button><button id="cancelEdit" class="button button-soft" type="button" hidden>Szerkesztés megszakítása</button></div>
             <p id="formStatus" class="form-status" role="status" aria-live="polite"></p>
           </form>
         </article>
