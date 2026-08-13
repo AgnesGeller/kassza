@@ -50,7 +50,7 @@
   <div id="appView" class="app" hidden>
     <header class="topbar">
       <a class="logo" href="#" id="homeLink"><img src="assets/diszkertek-emblem.png" alt=""><span><small>DÍSZKERTEK</small>Kassza</span></a>
-      <div class="user-menu"><span id="activeUser"></span><button id="switchUser" type="button">Név váltása</button></div>
+      <div class="user-menu"><span id="activeUser"></span><button id="switchUser" type="button">Kijelentkezés / Név váltás</button></div>
     </header>
 
     <main class="dashboard shell-wide">
@@ -97,7 +97,7 @@
           </form>
         </article>
 
-        <aside class="card recent-card"><div class="section-heading"><div><h2>Saját kassza</h2></div></div><div class="own-balance"><span>Kasszámban</span><strong id="ownCashValue">0 Ft</strong></div><div class="week-navigator"><button id="previousWeek" type="button" aria-label="Előző hét">‹</button><strong id="weekRange"></strong><button id="nextWeek" type="button" aria-label="Következő hét">›</button></div><div class="weekly-summary"><span><small>Bevétel</small><b id="weeklyIncome">0 Ft</b></span><span><small>Kiadás</small><b id="weeklyExpense">0 Ft</b></span><span><small>Különbözet</small><b id="weeklyBalance">0 Ft</b></span></div><div id="recentEntries" class="entry-list"></div><button id="showAllOwn" class="button button-soft full-button" type="button">Összes heti tétel</button></aside>
+        <aside class="card recent-card"><div class="section-heading"><div><h2>Saját kassza</h2></div></div><div class="own-balance"><span>Kasszámban</span><strong id="ownCashValue">0 Ft</strong></div><div class="week-navigator"><button id="previousWeek" type="button" aria-label="Előző hét">‹</button><strong id="weekRange"></strong><button id="nextWeek" type="button" aria-label="Következő hét">›</button></div><div class="weekly-summary"><span><small>Bevétel</small><b id="weeklyIncome">0 Ft</b></span><span><small>Kiadás</small><b id="weeklyExpense">0 Ft</b></span><span><small>Különbözet</small><b id="weeklyBalance">0 Ft</b></span></div><div id="recentEntries" class="entry-list"></div><button id="showAllOwn" class="button button-soft full-button" type="button">Összes heti tétel</button><button id="ownPdfButton" class="button button-soft full-button own-pdf-button" type="button">Mentés PDF-ben</button></aside>
       </section>
 
       <section id="adminPanel" class="admin-panel" hidden>
@@ -111,7 +111,7 @@
           </div>
         </article>
         <article class="card table-card">
-          <div class="section-heading"><div><h2>Részletes lista</h2></div><div class="backup-actions"><button id="exportButton" class="button button-soft" type="button">CSV mentés</button><button id="backupButton" class="button button-soft" type="button">Teljes mentés</button></div></div>
+          <div class="section-heading"><div><h2>Részletes lista</h2></div><div class="backup-actions"><button id="pdfButton" class="button button-soft" type="button">PDF mentés</button><button id="exportButton" class="button button-soft" type="button">CSV mentés</button><button id="backupButton" class="button button-soft" type="button">Teljes mentés</button></div></div>
           <div class="table-wrap"><table><thead><tr><th>Dátum</th><th>Csoportvezető</th><th>Típus</th><th>Ügyfél / részlet</th><th>Kategória</th><th class="number">Összeg</th><th></th></tr></thead><tbody id="entriesTable"></tbody></table></div>
           <div id="emptyTable" class="empty-state" hidden>Nincs a szűrésnek megfelelő bejegyzés.</div>
         </article>

@@ -5,6 +5,7 @@
     "Marci": "marci@kassza.diszkertek.hu", "Márk": "mark@kassza.diszkertek.hu",
     "Tamás": "tamas@kassza.diszkertek.hu"
   };
+  const MANAGERS = new Set(["Ági", "Tamás"]);
   let client = null, channel = null;
   const config = window.KASSZA_SUPABASE || {};
   const configured = Boolean(config.url && config.publishableKey && !config.url.startsWith("IDE_"));
@@ -21,6 +22,7 @@
     direction: item.direction, category: item.category, transfer_type: item.transferType || "",
     designation: item.designation || "", receipt: item.receipt || "", entry_date: item.date,
     amount: Number(item.amount), partner: item.partner || "", address: item.address || "", note: item.note || "" });
+  function profileFrom(name,userId){const profile={userId,name,role:MANAGERS.has(name)?"manager":"worker"};localStorage.setItem(PROFILE_KEY,JSON.stringify(profile));return profile;}
 
   async function profileFor(user) {
     const { data, error } = await client.from("profiles").select("id,display_name,role").eq("id", user.id).single();
@@ -35,8 +37,9 @@
       if (!client) throw new Error("A Supabase kapcsolat még nincs beállítva.");
       const { data, error } = await client.auth.signInWithPassword({ email: EMAILS[name], password: pin });
       if (error) throw new Error("Hibás PIN-kód.");
-      return profileFor(data.user);
+      return profileFrom(name,data.user.id);
     },
+    async profiles(){const {data,error}=await client.from("profiles").select("id,display_name,role").order("display_name");if(error)throw error;return data.map(item=>({userId:item.id,name:item.display_name,role:item.role}));},
     async restore() {
       if (!client) return null;
       const { data } = await client.auth.getSession();
@@ -52,6 +55,6 @@
     async create(item, userId) { const { data, error } = await client.from("entries").insert(toRow(item, userId)).select().single(); if (error) throw error; return mapEntry(data); },
     async update(id, item, userId) { const row=toRow(item,userId); delete row.user_id; delete row.leader_name; const { data, error } = await client.from("entries").update(row).eq("id",id).select().single(); if (error) throw error; return mapEntry(data); },
     async remove(id) { const { error } = await client.from("entries").delete().eq("id",id); if (error) throw error; },
-    subscribe(onChange) { if (!client) return; channel=client.channel("kassza-live").on("postgres_changes",{event:"*",schema:"public",table:"entries"},onChange).subscribe(); }
+    subscribe(onChange) { if (!client) return; if(channel)client.removeChannel(channel);channel=client.channel("kassza-live").on("postgres_changes",{event:"*",schema:"public",table:"entries"},onChange).subscribe(); }
   };
 })();
