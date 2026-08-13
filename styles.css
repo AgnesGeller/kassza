@@ -48,3 +48,18 @@
 @media print{.share-actions,.share-note,.share-status{display:none!important}}
 .install-status{flex-basis:100%;min-height:18px;margin:0;color:var(--forest);font-size:12px;font-weight:700;text-align:right}
 @media(max-width:540px){.install-status{width:100%;text-align:center}}
+/* A vezetői teljes és saját kassza jól elkülönülő nézetei */
+body.manager-statistics{background:linear-gradient(145deg,#d9ebe2 0%,#b9d7c8 45%,#eaf3ee 100%)}
+body.manager-statistics .topbar{border-bottom-color:#2d6a55;background:rgba(19,70,52,.96)}
+body.manager-statistics .topbar .logo,body.manager-statistics .topbar .user-menu{color:#fff}
+body.manager-statistics .manager-tabs{border-color:#174d3a;background:#123e30;box-shadow:0 10px 28px rgba(12,56,41,.2)}
+body.manager-statistics .manager-tab{color:#d5ebe1}body.manager-statistics .manager-tab.active{color:#123e30;background:#fff}
+body.manager-statistics .summary-card{border-color:#87b39f;background:#f7fbf9}
+body.manager-statistics .filter-card,body.manager-statistics .table-card{border-color:#77a993;box-shadow:0 16px 38px rgba(14,68,48,.14)}
+body.manager-own{background:linear-gradient(145deg,#f7fbf5 0%,#e9f5e9 50%,#fff 100%)}
+body.manager-own .manager-tabs{border:2px solid #79ad83;background:#e2f2e4;box-shadow:0 10px 25px rgba(63,128,91,.12)}
+body.manager-own .manager-tab{color:#2f6e48}body.manager-own .manager-tab.active{color:#fff;background:#65a272}
+body.manager-own .summary-card{border-color:#b7d9bb;background:#fff}
+body.manager-own .entry-card,body.manager-own .recent-card{border:2px solid #b4d7b8;box-shadow:0 14px 35px rgba(70,130,80,.1)}
+@media(max-width:540px){body.manager-statistics .topbar .logo small{color:#d5ebe1}}
+@media print{body.manager-statistics,body.manager-own{background:#fff!important}}
