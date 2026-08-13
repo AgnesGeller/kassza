@@ -75,8 +75,8 @@ function updatePartnerField() {
   $("#transferTypeWrap").hidden=!coworkerTransfer;
   $("#transferTypeField").disabled=!coworkerTransfer;
   $("#transferTypeField").required=coworkerTransfer;
-  $("#noteFieldWrap").hidden=customerExpense;
-  $("#noteField").disabled=customerExpense;
+  $("#noteFieldWrap").hidden=false;
+  $("#noteField").disabled=false;
   $("#noteField").required=otherEntry;
 }
 async function openApp(nextSession) {
