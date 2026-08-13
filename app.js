@@ -1,4 +1,5 @@
 const STORAGE_KEY = "diszkertek-kassza-v1";
+const MANAGER_VIEW_KEY = "diszkertek-kassza-manager-view-v1";
 const LEADERS = ["Ági", "Bendegúz", "Marci", "Márk", "Tamás"];
 const MANAGERS = ["Ági", "Tamás"];
 const CATEGORIES = {
@@ -77,12 +78,12 @@ async function openApp(nextSession) {
   if(nextSession.role==="manager"&&!nextSession.actingManager){managerIdentity=nextSession;KasszaDB.profiles().then(items=>profileDirectory=items).catch(()=>{});}
   welcomeView.hidden=true; appView.hidden=false;
   const admin=session.role==="admin",manager=session.role==="manager",hasStatistics=admin||manager;
-  managerView="statistics";
+  managerView=manager&&localStorage.getItem(MANAGER_VIEW_KEY)==="own"?"own":"statistics";
   $("#managerTabs").hidden=!manager;
-  $("#workerPanel").hidden=admin||manager; $("#adminPanel").hidden=!hasStatistics;
-  $("#managerStatsTab").classList.toggle("active",manager);
-  $("#managerEntryTab").classList.remove("active");
-  $("#balanceLabel").textContent=hasStatistics?"Teljes kassza":"Kasszámban";
+  $("#workerPanel").hidden=admin||(manager&&managerView==="statistics"); $("#adminPanel").hidden=!hasStatistics||(manager&&managerView==="own");
+  $("#managerStatsTab").classList.toggle("active",manager&&managerView==="statistics");
+  $("#managerEntryTab").classList.toggle("active",manager&&managerView==="own");
+  $("#balanceLabel").textContent=hasStatistics&&managerView!=="own"?"Teljes kassza":"Kasszámban";
   $("#activeUser").textContent=admin?"Munkáltató":session.name;
   $("#switchUser").textContent=(manager||session.actingManager)?"Kijelentkezés / Név váltás":"Kijelentkezés";
   $("#viewTitle").textContent=admin?"Kassza áttekintő":`Szia, ${session.name}!`;
@@ -123,6 +124,10 @@ function exportCSV() {
 }
 function exportBackup(){const payload={app:"Díszkertek Kassza",exportedAt:new Date().toISOString(),entries:entries()};const url=URL.createObjectURL(new Blob([JSON.stringify(payload,null,2)],{type:"application/json"})),a=document.createElement("a");a.href=url;a.download=`kassza-teljes-mentes-${today()}.json`;a.click();URL.revokeObjectURL(url);}
 function printOwnCash(){const previousShowAll=showAllOwnEntries,oldTitle=document.title;showAllOwnEntries=true;document.body.classList.add("print-own-cash");document.title=`${session.name}-kassza-${selectedWeek().startISO}-${selectedWeek().endISO}`;render();const cleanup=()=>{document.body.classList.remove("print-own-cash");document.title=oldTitle;showAllOwnEntries=previousShowAll;render();};window.addEventListener("afterprint",cleanup,{once:true});window.print();}
+function weeklyShareData(){const week=selectedWeek(),own=entries().filter(item=>item.leader===session.name&&item.date>=week.startISO&&item.date<=week.endISO),sum=totals(own);return {subject:`${session.name} kassza – ${week.startISO}–${week.endISO}`,text:[`Kassza – ${session.name}`,`${formatDate(week.startISO)} – ${formatDate(week.endISO)}`,`Bevétel: ${money(sum.income)}`,`Kiadás: ${money(sum.expense)}`,`Különbözet: ${money(sum.income-sum.expense)}`,`Tételek száma: ${own.length}`,location.origin+location.pathname].join("\n")};}
+function showShareThanks(){const status=$("#shareStatus");status.textContent="Köszönöm, hogy elküldted a kasszát. 😊 Nagyon cuki vagy ❤️";setTimeout(()=>status.textContent="",6000);}
+function shareViber(){showShareThanks();location.href=`viber://forward?text=${encodeURIComponent(weeklyShareData().text)}`;}
+function shareEmail(){const data=weeklyShareData();showShareThanks();location.href=`mailto:?subject=${encodeURIComponent(data.subject)}&body=${encodeURIComponent(data.text)}`;}
 
 function resetEntryEditor(direction="income") {
   editingId=null;form.reset();form.elements.direction.value=direction;form.elements.date.value=today();updateCategories();
@@ -145,8 +150,8 @@ $("#profileButtons").addEventListener("click",e=>{const button=e.target.closest(
 document.addEventListener("click",e=>{if(!e.target.closest(".profile-dropdown")){$("#profileButtons").hidden=true;$("#profileDropdownButton").setAttribute("aria-expanded","false");}});
 async function login(){const button=$("#enterButton"),name=$("#profileSelect").value,pin=$("#pinField").value,status=$("#loginStatus");button.disabled=true;button.textContent="Belépés…";status.textContent="";try{if(managerIdentity){await openManagerCash(name);return;}let next=rememberedSession?.name===name?rememberedSession:null;if(!next){if(!name||pin.length<6){status.textContent="Add meg a legalább 6 számjegyű PIN-kódot.";return;}next=await KasszaDB.login(name,pin);}await openApp(next);KasszaDB.subscribe(()=>refreshEntries().catch(()=>{}));}catch(error){status.textContent=error.message||"A belépés nem sikerült.";}finally{button.disabled=false;button.textContent="Belépés";}}
 $("#enterButton").addEventListener("click",login);$("#pinField").addEventListener("keydown",e=>{if(e.key==="Enter")login();});
-$("#managerStatsTab").addEventListener("click",()=>{managerView="statistics";$("#workerPanel").hidden=true;$("#adminPanel").hidden=false;$("#managerStatsTab").classList.add("active");$("#managerEntryTab").classList.remove("active");render();});
-$("#managerEntryTab").addEventListener("click",()=>{managerView="own";$("#adminPanel").hidden=true;$("#workerPanel").hidden=false;$("#managerEntryTab").classList.add("active");$("#managerStatsTab").classList.remove("active");render();});
+$("#managerStatsTab").addEventListener("click",()=>{managerView="statistics";localStorage.setItem(MANAGER_VIEW_KEY,managerView);$("#workerPanel").hidden=true;$("#adminPanel").hidden=false;$("#managerStatsTab").classList.add("active");$("#managerEntryTab").classList.remove("active");render();});
+$("#managerEntryTab").addEventListener("click",()=>{managerView="own";localStorage.setItem(MANAGER_VIEW_KEY,managerView);$("#adminPanel").hidden=true;$("#workerPanel").hidden=false;$("#managerEntryTab").classList.add("active");$("#managerStatsTab").classList.remove("active");render();});
 $("#switchUser").addEventListener("click",switchUser); $("#homeLink").addEventListener("click",e=>{e.preventDefault();switchUser();});
 form.addEventListener("change",e=>{if(e.target.name==="direction")updateCategories();if(e.target.name==="category")updatePartnerField();});
 form.addEventListener("submit",async e=>{e.preventDefault();if(!form.reportValidity())return;const data=Object.fromEntries(new FormData(form)),existing=editingId?entries().find(item=>item.id===editingId&&item.leader===session.name):null,record={leader:session.name,direction:data.direction,category:data.category,transferType:String(data.transferType||"").trim(),designation:String(data.designation||"").trim(),receipt:String(data.receipt||"").trim(),date:data.date,amount:Number(data.amount),partner:String(data.partner||"").trim(),address:String(data.address||"").trim(),note:String(data.note||"").trim()};const submit=form.querySelector(".submit-entry");submit.disabled=true;submit.textContent="Mentés…";try{const saved=existing?await KasszaDB.update(existing.id,record,session.userId):await KasszaDB.create(record,session.userId);if(existing)entryCache=entryCache.map(item=>item.id===saved.id?saved:item);else entryCache=[saved,...entryCache];const direction=data.direction;resetEntryEditor(direction);$("#formStatus").textContent=existing?"✓ A módosítást elmentettük.":"✓ A bejegyzést elmentettük.";render();setTimeout(()=>$("#formStatus").textContent="",2500);}catch(error){$("#formStatus").textContent=`Nem sikerült menteni: ${error.message}`;}finally{submit.disabled=false;submit.textContent="Bejegyzés mentése";}});
@@ -158,7 +163,7 @@ $("#entriesTable").addEventListener("click",e=>{const button=e.target.closest("[
 $("#confirmDelete").addEventListener("click",async()=>{if(!pendingDeleteId)return;const id=pendingDeleteId;pendingDeleteId=null;try{await KasszaDB.remove(id);entryCache=entryCache.filter(item=>item.id!==id);render();}catch(error){alert(`Nem sikerült törölni: ${error.message}`);}});
 $("#previousWeek").addEventListener("click",()=>{weekOffset--;showAllOwnEntries=false;render();});
 $("#nextWeek").addEventListener("click",()=>{if(weekOffset>=0)return;weekOffset++;showAllOwnEntries=false;render();});
-$("#ownPdfButton").addEventListener("click",printOwnCash);$("#pdfButton").addEventListener("click",()=>{const oldTitle=document.title;document.title=`Kassza-${today()}`;window.print();document.title=oldTitle;});$("#exportButton").addEventListener("click",exportCSV);$("#backupButton").addEventListener("click",exportBackup); $("#showAllOwn").addEventListener("click",()=>{showAllOwnEntries=!showAllOwnEntries;render();$("#recentEntries").scrollIntoView({behavior:"smooth",block:"start"});});
+$("#ownPdfButton").addEventListener("click",printOwnCash);$("#viberShareButton").addEventListener("click",shareViber);$("#emailShareButton").addEventListener("click",shareEmail);$("#pdfButton").addEventListener("click",()=>{const oldTitle=document.title;document.title=`Kassza-${today()}`;window.print();document.title=oldTitle;});$("#exportButton").addEventListener("click",exportCSV);$("#backupButton").addEventListener("click",exportBackup); $("#showAllOwn").addEventListener("click",()=>{showAllOwnEntries=!showAllOwnEntries;render();$("#recentEntries").scrollIntoView({behavior:"smooth",block:"start"});});
 const isInstalled=()=>window.matchMedia("(display-mode: standalone)").matches||window.navigator.standalone===true;
 let installPrompt;
 function syncInstallButton(){$("#installButton").hidden=isInstalled();}

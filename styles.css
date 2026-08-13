@@ -35,3 +35,14 @@
 .welcome #pinFieldWrap{width:min(100%,430px)}
 .welcome #pinField{font-size:1.15rem;letter-spacing:.22em;text-align:center}
 .backup-actions{display:flex;gap:.55rem;flex-wrap:wrap;justify-content:flex-end}
+/* Görgethető részletes lista */
+.table-wrap{max-height:62vh;overflow:auto;scrollbar-gutter:stable}
+.table-wrap thead th{position:sticky;top:0;z-index:2;background:#fff;box-shadow:0 1px 0 var(--line)}
+@media(max-width:540px){.table-wrap{max-height:65svh;-webkit-overflow-scrolling:touch}}
+@media print{.table-wrap{max-height:none;overflow:visible}.table-wrap thead th{position:static}}
+/* Heti kassza megosztása */
+.share-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:9px}.share-actions .button{padding:11px 8px;font-size:12px}.button-viber{color:#fff;background:#7360f2}.button-email{color:#164f3a;background:#dcefe4}
+.share-note{display:block;margin:8px 3px 0;color:var(--muted);font-size:10px;line-height:1.35;text-align:center}
+.share-status{min-height:18px;margin:9px 0 0;color:var(--forest);font-size:12px;font-weight:700;line-height:1.4;text-align:center}
+@media(max-width:360px){.share-actions{grid-template-columns:1fr}}
+@media print{.share-actions,.share-note,.share-status{display:none!important}}
