@@ -4,8 +4,8 @@ const ACTIVE_CASH_KEY = "diszkertek-kassza-active-cash-v1";
 const LEADERS = ["Ági", "Bendegúz", "Marci", "Márk", "Tamás"];
 const MANAGERS = ["Ági", "Tamás"];
 const CATEGORIES = {
-  income: ["Bevétel – ügyféltől", "Pénzátvétel – munkatárstól", "Egyéb"],
-  expense: ["Működési költség", "Ügyfélkiadás", "Pénzátadás – munkatársnak", "Egyéb"]
+  income: ["Bevétel – ügyféltől", "Pénzátvétel – munkatárstól", "Egyéb bevétel"],
+  expense: ["Működési költség", "Ügyfélkiadás", "Pénzátadás – munkatársnak", "Egyéb kiadás"]
 };
 
 const $ = selector => document.querySelector(selector);
@@ -22,6 +22,7 @@ let editingId = null;
 let showAllOwnEntries = false;
 let showAllPeriods = false;
 let weekOffset = 0;
+let filterWeekOffset = 0;
 let realtimeRefreshTimer = null;
 let pendingInvoiceShare = null;
 let invoiceShareApproved = false;
@@ -34,7 +35,9 @@ function today() { const d=new Date(), off=d.getTimezoneOffset(); return new Dat
 function money(value) { return new Intl.NumberFormat("hu-HU",{style:"currency",currency:"HUF",maximumFractionDigits:0}).format(Number(value)||0); }
 function formatDate(value) { if(!value)return ""; return new Intl.DateTimeFormat("hu-HU").format(new Date(`${value}T12:00:00`)); }
 function isoDate(date){const year=date.getFullYear(),month=String(date.getMonth()+1).padStart(2,"0"),day=String(date.getDate()).padStart(2,"0");return `${year}-${month}-${day}`;}
-function selectedWeek(){const base=new Date(),distance=(base.getDay()+2)%7;const start=new Date(base.getFullYear(),base.getMonth(),base.getDate()-distance+weekOffset*7),end=new Date(start.getFullYear(),start.getMonth(),start.getDate()+6);return {start,end,startISO:isoDate(start),endISO:isoDate(end)};}
+function weekForOffset(offset=0){const base=new Date(),distance=(base.getDay()+2)%7;const start=new Date(base.getFullYear(),base.getMonth(),base.getDate()-distance+offset*7),end=new Date(start.getFullYear(),start.getMonth(),start.getDate()+6);return {start,end,startISO:isoDate(start),endISO:isoDate(end)};}
+function selectedWeek(){return weekForOffset(weekOffset);}
+function setFilterWeek(offset=filterWeekOffset){filterWeekOffset=offset;const week=weekForOffset(filterWeekOffset);$("#filterFrom").value=week.startISO;$("#filterTo").value=week.endISO;$("#filterWeekRange").textContent=`${formatDate(week.startISO)} – ${formatDate(week.endISO)}`;$("#nextFilterWeek").disabled=filterWeekOffset>=0;render();}
 function escapeHTML(value) { return String(value??"").replace(/[&<>'"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"}[c])); }
 function syncManagerTheme(){document.body.classList.toggle("manager-statistics",session?.role==="manager"&&managerView==="statistics");document.body.classList.toggle("manager-own",session?.role==="manager"&&managerView==="own");}
 
@@ -56,8 +59,8 @@ function updatePartnerField() {
   const coworkerTransfer=direction==="expense"&&category==="Pénzátadás – munkatársnak";
   const incomeFromCustomer=direction==="income"&&category==="Bevétel – ügyféltől";
   const incomeFromCoworker=direction==="income"&&category==="Pénzátvétel – munkatárstól";
-  const otherIncome=direction==="income"&&category==="Egyéb";
-  const otherExpense=direction==="expense"&&category==="Egyéb";
+  const otherIncome=direction==="income"&&(category==="Egyéb bevétel"||category==="Egyéb");
+  const otherExpense=direction==="expense"&&(category==="Egyéb kiadás"||category==="Egyéb");
   const otherEntry=otherIncome||otherExpense;
   const customerExpense=direction==="expense"&&category==="Ügyfélkiadás";
   $("#categoryLabel").textContent=direction==="income"?"Bevétel típusa":"Kiadás típusa";
@@ -101,6 +104,7 @@ async function openApp(nextSession) {
   $("#activeUser").textContent=admin?"Munkáltató":session.name;
   $("#switchUser").textContent=(manager||session.actingManager)?"Kijelentkezés / Név váltás":"Kijelentkezés";
   $("#viewTitle").textContent=admin?"Kassza áttekintő":`Szia, ${session.name}!`;
+  if(hasStatistics)setFilterWeek(filterWeekOffset);
   await refreshEntries();
 }
 function switchUser() { resetEntryEditor();showAllOwnEntries=false;showAllPeriods=false;weekOffset=0;localStorage.removeItem(ACTIVE_CASH_KEY);session=null;entryCache=[];document.body.classList.remove("manager-statistics","manager-own");appView.hidden=true;welcomeView.hidden=false;$("#profileSelect").value="";$("#selectedProfileName").textContent="Név kiválasztása";$("#pinField").value="";$("#pinFieldWrap").hidden=true;$("#profileButtons").hidden=true;$("#profileDropdownButton").setAttribute("aria-expanded","false");$("#profileButtons").querySelectorAll(".profile-button").forEach(button=>button.classList.remove("active"));$("#enterButton").disabled=true;}
@@ -108,8 +112,8 @@ async function openManagerCash(name){if(!profileDirectory.length)profileDirector
 function filteredEntries() {
   let list=entries();
   if(session?.role!=="admin"&&session?.role!=="manager") return list.filter(item=>item.leader===session.name);
-  const from=$("#filterFrom").value,to=$("#filterTo").value,leader=$("#filterLeader").value,q=$("#filterText").value.trim().toLocaleLowerCase("hu");
-  return list.filter(item=>(!from||item.date>=from)&&(!to||item.date<=to)&&(!leader||item.leader===leader)&&(!q||[item.designation,item.partner,item.address,item.note,item.category,item.receipt,item.transferType].join(" ").toLocaleLowerCase("hu").includes(q)));
+  const from=$("#filterFrom").value,to=$("#filterTo").value,leader=$("#filterLeader").value,direction=$("#filterDirection").value,q=$("#filterText").value.trim().toLocaleLowerCase("hu");
+  return list.filter(item=>(!from||item.date>=from)&&(!to||item.date<=to)&&(!leader||item.leader===leader)&&(!direction||item.direction===direction)&&(!q||[item.designation,item.partner,item.address,item.note,item.category,item.receipt,item.transferType].join(" ").toLocaleLowerCase("hu").includes(q)));
 }
 function totals(list) {
   return list.reduce((acc,item)=>{acc[item.direction]+=Number(item.amount);return acc;},{income:0,expense:0});
@@ -127,7 +131,7 @@ function renderRecent(list) {
 function renderTable(list) {
   const sorted=[...list].sort((a,b)=>b.date.localeCompare(a.date)||b.createdAt.localeCompare(a.createdAt));
   $("#entriesTable").innerHTML=sorted.map(item=>`<tr><td>${formatDate(item.date)}</td><td><b>${escapeHTML(item.leader)}</b></td><td><span class="type-pill ${item.direction}">${item.direction==="income"?"Bevétel":"Kiadás"}</span></td><td>${escapeHTML(item.category)}${item.transferType?`<br><small>${escapeHTML(item.transferType)}</small>`:""}${item.receipt?`<br><small>${escapeHTML(item.receipt)}</small>`:""}</td><td><b>${escapeHTML(item.designation||item.transferType||item.partner||"–")}</b><br><small>${escapeHTML([item.partner,item.address,item.note].filter(Boolean).join(" · "))}</small></td><td class="number"><b>${item.direction==="income"?"+":"−"}${money(item.amount)}</b></td><td><button class="delete-row" data-delete="${item.id}" title="Törlés">✕</button></td></tr>`).join("");
-  const sum=totals(sorted);$("#tableTotals .table-total-breakdown").innerHTML=`<span class="total-income">Bevétel: <b>${money(sum.income)}</b></span><span class="total-expense">Kiadás: <b>${money(sum.expense)}</b></span>`;$("#tableTotals .table-total-balance").innerHTML=`<small>Egyenleg</small><strong>${money(sum.income-sum.expense)}</strong>`;
+  const sum=totals(sorted);$("#tableTotalIncome").textContent=money(sum.income);$("#tableTotalExpense").textContent=money(sum.expense);$("#tableTotalBalance").textContent=money(sum.income-sum.expense);
   $("#emptyTable").hidden=sorted.length>0;
 }
 function render() { if(!session)return; const list=filteredEntries(); if(session.role==="admin"){renderSummary(list);renderTable(list);}else if(session.role==="manager"){const own=entries().filter(item=>item.leader===session.name);renderSummary(managerView==="own"?own:list);renderRecent(own);renderTable(list);$("#balanceLabel").textContent=managerView==="own"?"Kasszámban":"Teljes kassza";}else{renderSummary(list);renderRecent(list);$("#balanceLabel").textContent="Kasszámban";} }
@@ -175,8 +179,9 @@ form.addEventListener("submit",async e=>{e.preventDefault();const data=Object.fr
 $("#sendInvoicePhoto").addEventListener("click",shareInvoicePhoto);
 $("#cancelEdit").addEventListener("click",()=>resetEntryEditor(form.elements.direction.value));
 $("#recentEntries").addEventListener("click",e=>{const editButton=e.target.closest("[data-edit-own]"),deleteButton=e.target.closest("[data-delete-own]");if(editButton)editOwnEntry(editButton.dataset.editOwn);if(deleteButton){const item=entries().find(entry=>entry.id===deleteButton.dataset.deleteOwn&&entry.leader===session?.name);if(!item)return;pendingDeleteId=item.id;$("#confirmDialog").showModal();}});
-[$("#filterFrom"),$("#filterTo"),$("#filterLeader")].forEach(el=>el.addEventListener("change",render)); $("#filterText").addEventListener("input",render);
-$("#clearFilters").addEventListener("click",()=>{$("#filterFrom").value="";$("#filterTo").value="";$("#filterLeader").value="";$("#filterText").value="";render();});
+[$("#filterLeader"),$("#filterDirection")].forEach(el=>el.addEventListener("change",render));$("#filterFrom").addEventListener("change",()=>{$("#filterWeekRange").textContent="Egyéni időszak";render();});$("#filterTo").addEventListener("change",()=>{$("#filterWeekRange").textContent="Egyéni időszak";render();});$("#filterText").addEventListener("input",render);
+$("#previousFilterWeek").addEventListener("click",()=>setFilterWeek(filterWeekOffset-1));$("#nextFilterWeek").addEventListener("click",()=>setFilterWeek(filterWeekOffset+1));
+$("#clearFilters").addEventListener("click",()=>{$("#filterLeader").value="";$("#filterDirection").value="";$("#filterText").value="";setFilterWeek(0);});
 $("#entriesTable").addEventListener("click",e=>{const button=e.target.closest("[data-delete]");if(!button)return;pendingDeleteId=button.dataset.delete;$("#confirmDialog").showModal();});
 $("#confirmDelete").addEventListener("click",async()=>{if(!pendingDeleteId)return;const id=pendingDeleteId;pendingDeleteId=null;try{await KasszaDB.remove(id);entryCache=entryCache.filter(item=>item.id!==id);render();}catch(error){alert(`Nem sikerült törölni: ${error.message}`);}});
 $("#previousWeek").addEventListener("click",()=>{weekOffset--;showAllOwnEntries=false;showAllPeriods=false;render();});

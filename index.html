@@ -105,16 +105,19 @@
       <section id="adminPanel" class="admin-panel" hidden>
         <article class="card filter-card">
           <div class="section-heading"><div><h2>Munkáltatói áttekintő</h2></div><button id="clearFilters" class="text-button" type="button">Szűrők törlése</button></div>
+          <div class="filter-week-navigator"><button id="previousFilterWeek" type="button" aria-label="Előző hét">‹</button><strong id="filterWeekRange"></strong><button id="nextFilterWeek" type="button" aria-label="Következő hét">›</button></div>
           <div class="filters">
             <label class="field"><span>Dátumtól</span><input id="filterFrom" type="date"></label>
             <label class="field"><span>Dátumig</span><input id="filterTo" type="date"></label>
             <label class="field"><span>Csoportvezető</span><select id="filterLeader"><option value="">Mindenki</option></select></label>
+            <label class="field"><span>Típus</span><select id="filterDirection"><option value="">Mindkettő</option><option value="income">Bevétel</option><option value="expense">Kiadás</option></select></label>
             <label class="field search-field"><span>Ügyfél, cím vagy megjegyzés</span><input id="filterText" type="search"></label>
           </div>
         </article>
         <article class="card table-card">
           <div class="section-heading"><div><h2>Részletes lista</h2></div><div class="backup-actions"><button id="pdfButton" class="button button-soft" type="button">PDF mentés</button><button id="exportButton" class="button button-soft" type="button">Szűrt lista CSV-ben</button><button id="backupButton" class="button button-soft" type="button">Biztonsági mentés</button></div></div>
-          <div class="table-wrap"><table><thead><tr><th>Dátum</th><th>Csoportvezető</th><th>Típus</th><th>Kategória</th><th>Ügyfél / részlet</th><th class="number">Összeg</th><th></th></tr></thead><tbody id="entriesTable"></tbody><tfoot><tr id="tableTotals"><td colspan="3"><strong>Összesen</strong></td><td colspan="2" class="table-total-breakdown"></td><td class="number table-total-balance"></td><td></td></tr></tfoot></table></div>
+          <div class="table-wrap"><table><thead><tr><th>Dátum</th><th>Csoportvezető</th><th>Típus</th><th>Kategória</th><th>Ügyfél / részlet</th><th class="number">Összeg</th><th></th></tr></thead><tbody id="entriesTable"></tbody></table></div>
+          <div id="tableTotals" class="table-totals"><strong>Összesen</strong><span class="total-income">Bevétel: <b id="tableTotalIncome">0 Ft</b></span><span class="total-expense">Kiadás: <b id="tableTotalExpense">0 Ft</b></span><span class="table-total-balance">Egyenleg: <b id="tableTotalBalance">0 Ft</b></span></div>
           <div id="emptyTable" class="empty-state" hidden>Nincs a szűrésnek megfelelő bejegyzés.</div>
         </article>
       </section>
