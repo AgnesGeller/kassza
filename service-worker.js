@@ -1,4 +1,4 @@
-const CACHE="diszkertek-kassza-v45";
+const CACHE="diszkertek-kassza-v53";
 const ASSETS=["./","index.html","styles.css","app.js","supabase-config.js","supabase-data.js","icon.svg","manifest.webmanifest","assets/diszkertek-logo.png","assets/diszkertek-emblem.png","assets/icon-192.png","assets/icon-512.png","assets/apple-touch-icon.png"];
 
 self.addEventListener("install",event=>event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(ASSETS))));
