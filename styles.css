@@ -11,7 +11,9 @@
 @media print{body.print-own-cash .shell-wide{width:100%!important}body.print-own-cash .recent-card{padding:0!important}body.print-own-cash .recent-card .section-heading h2{font-size:22px}body.print-own-cash .own-balance{margin:10px 0;padding:10px 14px}body.print-own-cash .week-navigator{margin:8px 0}body.print-own-cash .weekly-summary{gap:6px;margin:8px 0}body.print-own-cash .weekly-summary>span{padding:8px 5px}body.print-own-cash .entry-list{margin-top:10px}body.print-own-cash .entry-item{break-inside:avoid;page-break-inside:avoid;padding:8px 0}body.print-own-cash .entry-symbol{width:30px;height:30px}body.print-own-cash .entry-info small{font-size:10px}}
 @media print{body.print-own-cash .week-navigator strong{white-space:nowrap;font-size:14px}body.print-own-cash .week-navigator{display:flex;justify-content:center}}
 .print-cash-owner{display:none;margin:0 0 8px;font:700 26px Georgia,serif;color:var(--forest-dark)}
+.print-receipt-summary{display:none}
 @media print{body.print-own-cash .print-cash-owner{display:block!important}}
+@media print{body.print-own-cash .print-receipt-summary{display:grid!important;grid-template-columns:1fr 1fr;gap:8px;margin:8px 0 12px}body.print-own-cash .print-receipt-summary span{padding:8px;border:1px solid var(--line);border-radius:8px;font-size:11px;text-align:center}}
 
 /* Hivatalos Díszkertek arculat */
 .welcome-logo{display:block;width:min(285px,82%);height:auto;margin:0 auto 20px;object-fit:contain}
@@ -49,6 +51,7 @@
 .share-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:9px}.share-actions .button{padding:11px 8px;font-size:12px}.button-viber{color:#fff;background:#7360f2}.button-email{color:#164f3a;background:#dcefe4}
 .share-note{display:block;margin:8px 3px 0;color:var(--muted);font-size:10px;line-height:1.35;text-align:center}
 .share-status{min-height:18px;margin:9px 0 0;color:var(--forest);font-size:12px;font-weight:700;line-height:1.4;text-align:center}
+.invoice-photo-field input{padding:10px;background:#f4faf6}.invoice-photo-field small{display:block;margin-top:6px;color:var(--muted);font-size:11px}.invoice-photo-field input::file-selector-button{margin-right:10px;border:0;border-radius:8px;padding:9px 12px;color:#fff;font-weight:700;background:var(--forest)}
 @media(max-width:360px){.share-actions{grid-template-columns:1fr}}
 @media print{.share-actions,.share-note,.share-status{display:none!important}}
 .install-status{grid-column:1/-1;width:100%;min-height:18px;margin:0;color:var(--forest);font-size:12px;font-weight:700;text-align:right}
