@@ -86,7 +86,7 @@
               <label class="field"><span>Dátum</span><input name="date" type="date" required></label>
               <label class="field"><span id="categoryLabel">Bevétel típusa</span><select name="category" id="categorySelect" required></select></label>
               <label id="designationFieldWrap" class="field full"><span>Megnevezés</span><input id="designationField" name="designation" required></label>
-              <label class="field amount-field"><span>Összeg</span><div><input name="amount" type="number" min="1" step="1" inputmode="numeric" required><b>Ft</b></div></label>
+              <label class="field amount-field"><span>Összeg</span><div><input name="amount" type="text" inputmode="numeric" pattern="[1-9][0-9]*" autocomplete="off" required><b>Ft</b></div></label>
               <label id="receiptFieldWrap" class="field" hidden><span>Bizonylat</span><select id="receiptField" name="receipt" disabled><option value="">Válassz…</option><option>Számlás</option><option>Nem számlás</option></select></label>
               <label id="transferTypeWrap" class="field" hidden><span>Pénzátadás típusa</span><select id="transferTypeField" name="transferType" disabled><option value="">Válassz…</option><option>Fizetési előleg</option><option>Pénzátadás</option></select></label>
               <label id="partnerFieldWrap" class="field"><span id="partnerLabel">Ügyfél neve</span><input id="partnerField" name="partner" autocomplete="organization" required></label>
