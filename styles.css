@@ -9,6 +9,7 @@
 @media print{body.print-own-cash .hero-row,body.print-own-cash .summary-grid,body.print-own-cash .manager-tabs,body.print-own-cash .entry-card,body.print-own-cash .admin-panel,body.print-own-cash .recent-card button,body.print-own-cash .entry-actions{display:none!important}body.print-own-cash .worker-layout{display:block}body.print-own-cash .recent-card{display:block!important;max-width:760px;margin:0 auto}body.print-own-cash .entry-list{margin-top:20px}}
 @page{size:A4;margin:10mm}
 @media print{body.print-own-cash .shell-wide{width:100%!important}body.print-own-cash .recent-card{padding:0!important}body.print-own-cash .recent-card .section-heading h2{font-size:22px}body.print-own-cash .own-balance{margin:10px 0;padding:10px 14px}body.print-own-cash .week-navigator{margin:8px 0}body.print-own-cash .weekly-summary{gap:6px;margin:8px 0}body.print-own-cash .weekly-summary>span{padding:8px 5px}body.print-own-cash .entry-list{margin-top:10px}body.print-own-cash .entry-item{break-inside:avoid;page-break-inside:avoid;padding:8px 0}body.print-own-cash .entry-symbol{width:30px;height:30px}body.print-own-cash .entry-info small{font-size:10px}}
+@media print{body.print-own-cash .week-navigator strong{white-space:nowrap;font-size:14px}body.print-own-cash .week-navigator{display:flex;justify-content:center}}
 .print-cash-owner{display:none;margin:0 0 8px;font:700 26px Georgia,serif;color:var(--forest-dark)}
 @media print{body.print-own-cash .print-cash-owner{display:block!important}}
 
