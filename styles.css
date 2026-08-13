@@ -45,8 +45,10 @@
 /* Görgethető részletes lista */
 .table-wrap{max-height:62vh;overflow:auto;scrollbar-gutter:stable}
 .table-wrap thead th{position:sticky;top:0;z-index:2;background:#fff;box-shadow:0 1px 0 var(--line)}
+.table-wrap tfoot td{position:sticky;bottom:0;z-index:2;border-top:2px solid var(--forest);border-bottom:0;background:#edf7f1;box-shadow:0 -4px 12px rgba(13,56,41,.08)}.table-total-breakdown span{display:inline-block;margin-right:22px}.total-income{color:var(--income)}.total-expense{color:var(--expense)}.table-total-balance small,.table-total-balance strong{display:block}.table-total-balance small{color:var(--muted);font-size:9px;text-transform:uppercase}.table-total-balance strong{margin-top:3px;color:var(--forest);font-size:14px}
+@media(max-width:700px){.table-total-breakdown span{display:block;margin:2px 0}.table-wrap tfoot td{position:static}}
 @media(max-width:540px){.table-wrap{max-height:65svh;-webkit-overflow-scrolling:touch}}
-@media print{.table-wrap{max-height:none;overflow:visible}.table-wrap thead th{position:static}}
+@media print{.table-wrap{max-height:none;overflow:visible}.table-wrap thead th,.table-wrap tfoot td{position:static}}
 /* Heti kassza megosztása */
 .share-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:9px}.share-actions .button{padding:11px 8px;font-size:12px}.button-viber{color:#fff;background:#7360f2}.button-email{color:#164f3a;background:#dcefe4}
 .share-note{display:block;margin:8px 3px 0;color:var(--muted);font-size:10px;line-height:1.35;text-align:center}
