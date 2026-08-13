@@ -1,4 +1,5 @@
 (function () {
+  const PROFILE_KEY = "diszkertek-kassza-profile-v1";
   const EMAILS = {
     "Ági": "agi@kassza.diszkertek.hu", "Bendegúz": "bendeguz@kassza.diszkertek.hu",
     "Marci": "marci@kassza.diszkertek.hu", "Márk": "mark@kassza.diszkertek.hu",
@@ -24,7 +25,9 @@
   async function profileFor(user) {
     const { data, error } = await client.from("profiles").select("id,display_name,role").eq("id", user.id).single();
     if (error) throw error;
-    return { userId: data.id, name: data.display_name, role: data.role };
+    const profile = { userId: data.id, name: data.display_name, role: data.role };
+    localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
+    return profile;
   }
   window.KasszaDB = {
     configured,
@@ -37,9 +40,14 @@
     async restore() {
       if (!client) return null;
       const { data } = await client.auth.getSession();
-      return data.session ? profileFor(data.session.user) : null;
+      if (!data.session) { localStorage.removeItem(PROFILE_KEY); return null; }
+      try {
+        const cached = JSON.parse(localStorage.getItem(PROFILE_KEY));
+        if (cached?.userId === data.session.user.id) return cached;
+      } catch (_) { localStorage.removeItem(PROFILE_KEY); }
+      return profileFor(data.session.user);
     },
-    async logout() { if (channel) await client.removeChannel(channel); channel = null; if (client) await client.auth.signOut(); },
+    async logout() { if (channel) await client.removeChannel(channel); channel = null; localStorage.removeItem(PROFILE_KEY); if (client) await client.auth.signOut(); },
     async list() { const { data, error } = await client.from("entries").select("*").order("entry_date", { ascending: false }).order("created_at", { ascending: false }); if (error) throw error; return data.map(mapEntry); },
     async create(item, userId) { const { data, error } = await client.from("entries").insert(toRow(item, userId)).select().single(); if (error) throw error; return mapEntry(data); },
     async update(id, item, userId) { const row=toRow(item,userId); delete row.user_id; delete row.leader_name; const { data, error } = await client.from("entries").update(row).eq("id",id).select().single(); if (error) throw error; return mapEntry(data); },
