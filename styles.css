@@ -46,3 +46,5 @@
 .share-status{min-height:18px;margin:9px 0 0;color:var(--forest);font-size:12px;font-weight:700;line-height:1.4;text-align:center}
 @media(max-width:360px){.share-actions{grid-template-columns:1fr}}
 @media print{.share-actions,.share-note,.share-status{display:none!important}}
+.install-status{flex-basis:100%;min-height:18px;margin:0;color:var(--forest);font-size:12px;font-weight:700;text-align:right}
+@media(max-width:540px){.install-status{width:100%;text-align:center}}

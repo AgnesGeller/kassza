@@ -60,6 +60,7 @@
           <button id="installButton" class="button button-soft" type="button">⬇ Alkalmazás telepítése</button>
           <button id="updateButton" class="button button-soft desktop-update" type="button">↻ Frissítés</button>
         </div>
+        <p id="installStatus" class="install-status" role="status" aria-live="polite"></p>
       </section>
 
       <section id="summaryCards" class="summary-grid" aria-label="Pénzügyi összesítő">
@@ -120,7 +121,7 @@
   </div>
 
   <dialog id="confirmDialog"><form method="dialog"><h2>Törlöd a bejegyzést?</h2><div class="dialog-actions"><button class="button button-soft" value="cancel">Mégse</button><button id="confirmDelete" class="button button-danger" value="default">Törlés</button></div></form></dialog>
-  <dialog id="installHelpDialog"><form method="dialog"><button class="dialog-close" value="cancel" aria-label="Bezárás">×</button><p class="eyebrow">ALKALMAZÁS TELEPÍTÉSE</p><h2>Telepítés erre a készülékre</h2><p><b>Számítógép – Chrome / Edge:</b> a címsor jobb oldalán kattints az Alkalmazás telepítése ikonra. Ha nincs ikon, nyisd meg a böngésző jobb felső menüjét, majd válaszd az „Alkalmazások” → „Kassza telepítése” lehetőséget.</p><p><b>iPhone / iPad:</b> nyisd meg Safariban, koppints a Megosztás ikonra, majd válaszd a „Főképernyőhöz adás” lehetőséget.</p><p><b>Android:</b> nyisd meg Chrome-ban, majd a böngésző menüjében válaszd az „Alkalmazás telepítése” vagy „Hozzáadás a kezdőképernyőhöz” lehetőséget.</p><button class="button button-primary full-button" value="cancel">Rendben</button></form></dialog>
+  <dialog id="installHelpDialog"><form method="dialog"><button class="dialog-close" value="cancel" aria-label="Bezárás">×</button><p class="eyebrow">ALKALMAZÁS TELEPÍTÉSE</p><h2>A böngészőből telepíthető</h2><p>A böngésző nem indította el automatikusan a telepítést.</p><p><b>Számítógép – Chrome:</b> jobb felső három pont → „Átküldés, mentés és megosztás” → „Oldal telepítése alkalmazásként”.</p><p><b>Számítógép – Edge:</b> jobb felső három pont → „Alkalmazások” → „Webhely telepítése alkalmazásként”.</p><p><b>iPhone / iPad:</b> Safari → Megosztás → „Főképernyőhöz adás”.</p><p><b>Android:</b> Chrome menü → „Alkalmazás telepítése” vagy „Hozzáadás a kezdőképernyőhöz”.</p><button class="button button-primary full-button" value="cancel">Rendben</button></form></dialog>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-config.js"></script>
