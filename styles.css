@@ -56,11 +56,15 @@ body.manager-statistics .manager-tabs{border-color:#174d3a;background:#123e30;bo
 body.manager-statistics .manager-tab{color:#d5ebe1}body.manager-statistics .manager-tab.active{color:#123e30;background:#fff}
 body.manager-statistics .summary-card{border-color:#87b39f;background:#f7fbf9}
 body.manager-statistics .filter-card,body.manager-statistics .table-card{border-color:#77a993;box-shadow:0 16px 38px rgba(14,68,48,.14)}
-body.manager-own{background:linear-gradient(145deg,#f7fbf5 0%,#e9f5e9 50%,#fff 100%)}
-body.manager-own .manager-tabs{border:2px solid #79ad83;background:#e2f2e4;box-shadow:0 10px 25px rgba(63,128,91,.12)}
-body.manager-own .manager-tab{color:#2f6e48}body.manager-own .manager-tab.active{color:#fff;background:#65a272}
-body.manager-own .summary-card{border-color:#b7d9bb;background:#fff}
-body.manager-own .entry-card,body.manager-own .recent-card{border:2px solid #b4d7b8;box-shadow:0 14px 35px rgba(70,130,80,.1)}
+body.manager-own{background:linear-gradient(145deg,#d6ecd9 0%,#b9ddc0 52%,#e6f3e8 100%)}
+body.manager-own .topbar{border-bottom:2px solid #276443;background:rgba(255,255,255,.96)}
+body.manager-own .manager-tabs{border:2px solid #276443;background:#c3e1c8;box-shadow:0 10px 25px rgba(24,83,51,.2)}
+body.manager-own .manager-tab{color:#164f32}body.manager-own .manager-tab.active{color:#fff;background:#1f7044;box-shadow:0 5px 14px rgba(20,83,48,.25)}
+body.manager-own .summary-card{border:2px solid #6ba77a;background:#fff;box-shadow:0 10px 25px rgba(28,91,53,.13)}
+body.manager-own .entry-card,body.manager-own .recent-card{border:2px solid #4f9562;background:#fff;box-shadow:0 14px 35px rgba(24,83,45,.17)}
+body.manager-own .own-balance{background:#125b37}
+body.manager-own .week-navigator button{color:#fff;background:#397f50}
+body.manager-own .weekly-summary>span{border-color:#79ad83;background:#dcefe0}
 @media(max-width:540px){body.manager-statistics .topbar .logo small{color:#d5ebe1}}
 @media print{body.manager-statistics,body.manager-own{background:#fff!important}}
 /* Középre igazított üdvözlés, külön jobb oldali alkalmazásgombok */
