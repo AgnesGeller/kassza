@@ -22,7 +22,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
-  <link rel="stylesheet" href="styles.css?v=75">
+  <link rel="stylesheet" href="styles.css?v=76">
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
   <link rel="preconnect" href="https://wojgdfojupnfldrmqaht.supabase.co" crossorigin>
   <title>Kassza – Díszkertek</title>
@@ -88,7 +88,7 @@
               <label id="designationFieldWrap" class="field full"><span>Megnevezés</span><input id="designationField" name="designation" required></label>
               <label class="field amount-field"><span>Összeg</span><div><input name="amount" type="text" inputmode="numeric" pattern="[1-9][0-9]*" autocomplete="off" required><b>Ft</b></div></label>
               <label id="receiptFieldWrap" class="field" hidden><span>Bizonylat</span><select id="receiptField" name="receipt" disabled><option value="">Válassz…</option><option>Számlás</option><option>Nem számlás</option></select></label>
-              <label id="invoicePhotoWrap" class="field full invoice-photo-field" hidden><span>Számla fotózása</span><input id="invoicePhoto" name="invoicePhoto" type="file" accept="image/*" capture="environment" disabled><small id="invoicePhotoHelp">A fotót az alkalmazás nem tárolja.</small></label>
+              <label id="invoicePhotoWrap" class="field full invoice-photo-field" hidden><span>Számlakép csatolása</span><input id="invoicePhoto" name="invoicePhoto" type="file" accept="image/*" disabled><small id="invoicePhotoHelp">Készíts képet, vagy válassz egy meglévő képfájlt. Az alkalmazás nem tárolja.</small></label>
               <label id="transferTypeWrap" class="field" hidden><span>Pénzátadás típusa</span><select id="transferTypeField" name="transferType" disabled><option value="">Válassz…</option><option>Fizetési előleg</option><option>Pénzátadás</option></select></label>
               <label id="partnerFieldWrap" class="field"><span id="partnerLabel">Ügyfél neve</span><input id="partnerField" name="partner" autocomplete="organization" required></label>
               <label id="addressFieldWrap" class="field full"><span>Ügyfél címe</span><input id="addressField" name="address" autocomplete="street-address"></label>
@@ -128,8 +128,8 @@
   <dialog id="installHelpDialog"><form method="dialog"><button class="dialog-close" value="cancel" aria-label="Bezárás">×</button><p class="eyebrow">ALKALMAZÁS TELEPÍTÉSE</p><h2>A böngészőből telepíthető</h2><p>A böngésző nem indította el automatikusan a telepítést.</p><p><b>Számítógép – Chrome:</b> jobb felső három pont → „Átküldés, mentés és megosztás” → „Oldal telepítése alkalmazásként”.</p><p><b>Számítógép – Edge:</b> jobb felső három pont → „Alkalmazások” → „Webhely telepítése alkalmazásként”.</p><p><b>iPhone / iPad:</b> Safari → Megosztás → „Főképernyőhöz adás”.</p><p><b>Android:</b> Chrome menü → „Alkalmazás telepítése” vagy „Hozzáadás a kezdőképernyőhöz”.</p><button class="button button-primary full-button" value="cancel">Rendben</button></form></dialog>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="supabase-config.js?v=75"></script>
-  <script src="supabase-data.js?v=75"></script>
-  <script src="app.js?v=75"></script>
+  <script src="supabase-config.js?v=76"></script>
+  <script src="supabase-data.js?v=76"></script>
+  <script src="app.js?v=76"></script>
 </body>
 </html>
