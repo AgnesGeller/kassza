@@ -2,7 +2,7 @@
   const PROFILE_KEY = "diszkertek-kassza-profile-v1";
   const EMAILS = {
     "Ági": "agi@kassza.diszkertek.hu", "Bendegúz": "bendeguz@kassza.diszkertek.hu",
-    "Marci": "marci@kassza.diszkertek.hu", "Márk": "mark@kassza.diszkertek.hu",
+    "Ádám": "adam@kassza.diszkertek.hu", "Márk": "mark@kassza.diszkertek.hu",
     "Tamás": "tamas@kassza.diszkertek.hu"
   };
   const MANAGERS = new Set(["Ági", "Tamás"]);
