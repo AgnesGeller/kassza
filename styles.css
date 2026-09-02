@@ -53,7 +53,7 @@
 .share-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:9px}.share-actions .button{padding:11px 8px;font-size:12px}.button-viber{color:#fff;background:#7360f2}.button-email{color:#164f3a;background:#dcefe4}
 .share-note{display:block;margin:8px 3px 0;color:var(--muted);font-size:10px;line-height:1.35;text-align:center}
 .share-status{min-height:18px;margin:9px 0 0;color:var(--forest);font-size:12px;font-weight:700;line-height:1.4;text-align:center}
-.invoice-photo-field input{padding:10px;background:#f4faf6}.invoice-photo-field small{display:block;margin-top:6px;color:var(--muted);font-size:11px}.invoice-photo-field input::file-selector-button{margin-right:10px;border:0;border-radius:8px;padding:9px 12px;color:#fff;font-weight:700;background:var(--forest)}
+.invoice-photo-field{position:relative}.invoice-photo-field small{display:block;margin-top:6px;color:var(--muted);font-size:11px}.invoice-photo-input{position:absolute;width:1px;height:1px;padding:0;border:0;opacity:0;pointer-events:none}.photo-source-actions{display:grid;gap:12px;margin-top:24px}.photo-source-actions .button{width:100%}
 @media(max-width:360px){.share-actions{grid-template-columns:1fr}}
 @media print{.share-actions,.share-note,.share-status{display:none!important}}
 .install-status{grid-column:1/-1;width:100%;min-height:18px;margin:0;color:var(--forest);font-size:12px;font-weight:700;text-align:right}
