@@ -2,7 +2,7 @@
   "name":"Díszkertek Kassza",
   "short_name":"Kassza",
   "description":"Egyszerű napi pénzügyi nyilvántartás csoportvezetőknek.",
-  "start_url":"./",
+  "start_url":"./?app-version=82",
   "display":"standalone",
   "background_color":"#fbfcf8",
   "theme_color":"#164f3a",

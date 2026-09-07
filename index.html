@@ -22,7 +22,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
-  <link rel="stylesheet" href="styles.css?v=76">
+  <link rel="stylesheet" href="styles.css?v=82">
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
   <link rel="preconnect" href="https://wojgdfojupnfldrmqaht.supabase.co" crossorigin>
   <title>Kassza – Díszkertek</title>
@@ -104,7 +104,7 @@
 
       <section id="adminPanel" class="admin-panel" hidden>
         <article class="card filter-card">
-          <div class="section-heading"><div><h2>Munkáltatói áttekintő</h2></div><button id="clearFilters" class="text-button" type="button">Szűrők törlése</button></div>
+          <div class="section-heading"><div><h2>Munkáltatói áttekintő</h2></div><div class="manager-heading-actions"><button id="recurringExpensesButton" class="button button-soft" type="button">Havi fix kiadások</button><button id="clearFilters" class="text-button" type="button">Szűrők törlése</button></div></div>
           <div class="filter-week-navigator"><button id="previousFilterWeek" type="button" aria-label="Előző hét">‹</button><strong id="filterWeekRange"></strong><button id="nextFilterWeek" type="button" aria-label="Következő hét">›</button></div>
           <div class="filters">
             <label class="field"><span>Dátumtól</span><input id="filterFrom" type="date"></label>
@@ -128,10 +128,11 @@
   <dialog id="confirmDialog"><form method="dialog"><h2>Törlöd a bejegyzést?</h2><div class="dialog-actions"><button class="button button-soft" value="cancel">Mégse</button><button id="confirmDelete" class="button button-danger" value="default">Törlés</button></div></form></dialog>
   <dialog id="photoSourceDialog"><form method="dialog"><button class="dialog-close" value="cancel" aria-label="Bezárás">×</button><h2>Számlakép hozzáadása</h2><div class="photo-source-actions"><button id="takeInvoicePhoto" class="button button-primary" type="button">Fénykép készítése</button><button id="browseInvoicePhoto" class="button button-soft" type="button">Kiválasztás a készülékről</button></div></form></dialog>
   <dialog id="installHelpDialog"><form method="dialog"><button class="dialog-close" value="cancel" aria-label="Bezárás">×</button><p class="eyebrow">ALKALMAZÁS TELEPÍTÉSE</p><h2>A böngészőből telepíthető</h2><p>A böngésző nem indította el automatikusan a telepítést.</p><p><b>Számítógép – Chrome:</b> jobb felső három pont → „Átküldés, mentés és megosztás” → „Oldal telepítése alkalmazásként”.</p><p><b>Számítógép – Edge:</b> jobb felső három pont → „Alkalmazások” → „Webhely telepítése alkalmazásként”.</p><p><b>iPhone / iPad:</b> Safari → Megosztás → „Főképernyőhöz adás”.</p><p><b>Android:</b> Chrome menü → „Alkalmazás telepítése” vagy „Hozzáadás a kezdőképernyőhöz”.</p><button class="button button-primary full-button" value="cancel">Rendben</button></form></dialog>
+  <dialog id="recurringExpensesDialog" class="recurring-dialog"><div class="recurring-dialog-body"><button id="closeRecurringExpenses" class="dialog-close" type="button" aria-label="Bezárás">×</button><p class="eyebrow">VEZETŐI BEÁLLÍTÁS</p><h2>Havi fix kiadások</h2><p>Az aktív tételek minden hónap első napjára automatikusan bekerülnek a Kasszába.</p><div id="recurringExpensesList" class="recurring-expense-list"></div><button id="newRecurringExpense" class="button button-primary full-button" type="button">Új havi fix kiadás</button><form id="recurringExpenseForm" class="recurring-expense-form" hidden><input id="recurringCode" type="hidden"><label class="field"><span>Megnevezés</span><input id="recurringDesignation" maxlength="120" required></label><label class="field"><span>Kategória</span><select id="recurringCategory" required><option>Működési költség</option><option>Ügyfélkiadás</option><option>Egyéb kiadás</option></select></label><label class="field"><span>Havi összeg</span><div class="recurring-amount"><input id="recurringAmount" type="number" min="1" step="1" required><b>Ft</b></div></label><label class="field"><span>Első hónap</span><input id="recurringStartMonth" type="month" required></label><label class="field full"><span>Megjegyzés</span><input id="recurringNote" maxlength="300"></label><label class="recurring-active"><input id="recurringActive" type="checkbox" checked><span>Aktív, havonta kerüljön be</span></label><div class="dialog-actions"><button id="cancelRecurringEdit" class="button button-soft" type="button">Mégse</button><button class="button button-primary" type="submit">Mentés</button></div></form><p id="recurringExpensesStatus" class="form-status" role="status" aria-live="polite"></p></div></dialog>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="supabase-config.js?v=76"></script>
-  <script src="supabase-data.js?v=76"></script>
-  <script src="app.js?v=76"></script>
+  <script src="supabase-config.js?v=82"></script>
+  <script src="supabase-data.js?v=82"></script>
+  <script src="app.js?v=82"></script>
 </body>
 </html>

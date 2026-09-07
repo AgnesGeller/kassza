@@ -17,6 +17,7 @@
     direction: row.direction, category: row.category, transferType: row.transfer_type,
     designation: row.designation, receipt: row.receipt, date: row.entry_date,
     amount: Number(row.amount), partner: row.partner, address: row.address, note: row.note,
+    sourceType: row.source_type || "", sourceId: row.source_id || "",
     createdAt: row.created_at, updatedAt: row.updated_at });
   const toRow = (item, userId) => ({ user_id: userId, leader_name: item.leader,
     direction: item.direction, category: item.category, transfer_type: item.transferType || "",
@@ -51,10 +52,14 @@
       return profileFor(data.session.user);
     },
     async logout() { if (channel) await client.removeChannel(channel); channel = null; localStorage.removeItem(PROFILE_KEY); if (client) await client.auth.signOut(); },
-    async list() { const { data, error } = await client.from("entries").select("*").order("entry_date", { ascending: false }).order("created_at", { ascending: false }); if (error) throw error; return data.map(mapEntry); },
-    async create(item, userId) { const { data, error } = await client.from("entries").insert(toRow(item, userId)).select().single(); if (error) throw error; return mapEntry(data); },
-    async update(id, item, userId) { const row=toRow(item,userId); delete row.user_id; delete row.leader_name; const { data, error } = await client.from("entries").update(row).eq("id",id).select().single(); if (error) throw error; return mapEntry(data); },
-    async remove(id) { const { error } = await client.from("entries").delete().eq("id",id); if (error) throw error; },
+    async list() { const [{data,error},linksResult]=await Promise.all([client.from("entries").select("*").order("entry_date",{ascending:false}).order("created_at",{ascending:false}),client.rpc("list_recurring_cash_entry_links")]);if(error)throw error;const linked=new Map((linksResult.error?[]:linksResult.data||[]).map(item=>[item.entry_id,item.expense_code]));return data.map(row=>{const entry=mapEntry(row);if(linked.has(entry.id)){entry.sourceType="recurring_expense";entry.sourceId=linked.get(entry.id);}return entry;}); },
+    async create(item, userId, overridePin="") { const row=toRow(item,userId);const {data,error}=overridePin?await client.rpc("save_historical_cash_entry",{p_entry_id:null,p_user_id:userId,p_leader_name:item.leader,p_entry:row,p_pin:overridePin}):await client.from("entries").insert(row).select().single();if(error)throw error;return mapEntry(data); },
+    async update(id, item, userId, overridePin="") { const row=toRow(item,userId);delete row.user_id;delete row.leader_name;const {data,error}=overridePin?await client.rpc("save_historical_cash_entry",{p_entry_id:id,p_user_id:userId,p_leader_name:item.leader,p_entry:row,p_pin:overridePin}):await client.from("entries").update(row).eq("id",id).select().single();if(error)throw error;return mapEntry(data); },
+    async remove(id, overridePin="") { const {error}=overridePin?await client.rpc("delete_historical_cash_entry",{p_entry_id:id,p_pin:overridePin}):await client.from("entries").delete().eq("id",id);if(error)throw error; },
+    async ensureRecurringExpenses() { const {data,error}=await client.rpc("generate_recurring_cash_expenses_for_cash");if(error)throw error;return Number(data||0); },
+    async recurringExpenses() { const {data,error}=await client.rpc("list_recurring_cash_expenses");if(error)throw error;return (data||[]).map(row=>({code:row.code,designation:row.designation,category:row.category,note:row.note,amount:Number(row.amount),startMonth:row.start_month,active:row.active,updatedAt:row.updated_at})); },
+    async saveRecurringExpense(rule) { const {data,error}=await client.rpc("save_recurring_cash_expense",{p_code:rule.code||null,p_designation:rule.designation,p_category:rule.category,p_note:rule.note||"",p_amount:Number(rule.amount),p_start_month:rule.startMonth,p_active:rule.active});if(error)throw error;return data; },
+    async removeRecurringExpense(code) { const {error}=await client.rpc("delete_recurring_cash_expense",{p_code:code});if(error)throw error; },
     subscribe(onChange) { if (!client) return; if(channel)client.removeChannel(channel);channel=client.channel("kassza-live").on("postgres_changes",{event:"*",schema:"public",table:"entries"},onChange).subscribe(); }
   };
 })();
