@@ -53,6 +53,7 @@
     },
     async logout() { if (channel) await client.removeChannel(channel); channel = null; localStorage.removeItem(PROFILE_KEY); if (client) await client.auth.signOut(); },
     async list() { const {data,error}=await client.from("entries").select("*").order("entry_date",{ascending:false}).order("created_at",{ascending:false});if(error)throw error;return data.map(mapEntry); },
+    async customers() { const {data,error}=await client.rpc("list_approved_cash_customers");if(error)throw error;return (data||[]).map(item=>item.full_name).filter(Boolean); },
     async create(item, userId, overridePin="") { const row=toRow(item,userId);const {data,error}=overridePin?await client.rpc("save_historical_cash_entry",{p_entry_id:null,p_user_id:userId,p_leader_name:item.leader,p_entry:row,p_pin:overridePin}):await client.from("entries").insert(row).select().single();if(error)throw error;return mapEntry(data); },
     async update(id, item, userId, overridePin="") { const row=toRow(item,userId);delete row.user_id;delete row.leader_name;const {data,error}=overridePin?await client.rpc("save_historical_cash_entry",{p_entry_id:id,p_user_id:userId,p_leader_name:item.leader,p_entry:row,p_pin:overridePin}):await client.from("entries").update(row).eq("id",id).select().single();if(error)throw error;return mapEntry(data); },
     async remove(id, overridePin="") { const {error}=overridePin?await client.rpc("delete_historical_cash_entry",{p_entry_id:id,p_pin:overridePin}):await client.from("entries").delete().eq("id",id);if(error)throw error; },
