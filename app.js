@@ -24,6 +24,7 @@ let showAllPeriods = false;
 let weekOffset = 0;
 let filterWeekOffset = 0;
 let realtimeRefreshTimer = null;
+let entriesLoadPromise = null;
 let pendingInvoiceShare = null;
 let invoiceShareApproved = false;
 let customerNames = [];
@@ -32,7 +33,34 @@ let customerListState = "idle";
 
 function readJSON(key, fallback) { try { return JSON.parse(localStorage.getItem(key)) ?? fallback; } catch (_) { return fallback; } }
 function entries() { return entryCache; }
-async function refreshEntries() { entryCache=await KasszaDB.list(); render(); }
+async function retryRead(read) {
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try { return await read(); }
+    catch (error) {
+      if (attempt === 2) throw error;
+      await new Promise(resolve => setTimeout(resolve, 800 * (attempt + 1)));
+    }
+  }
+}
+async function refreshEntries() {
+  if (entriesLoadPromise) return entriesLoadPromise;
+  entriesLoadPromise = (async () => {
+    const status = $("#dataLoadStatus");
+    try {
+      const latest = await retryRead(() => KasszaDB.list());
+      entryCache = latest;
+      render();
+      status.textContent = "";
+      status.classList.remove("load-error");
+    } catch (error) {
+      status.textContent = "A kassza adatai most nem tölthetők be. Ellenőrizd az internetkapcsolatot; a Kassza visszatéréskor újrapróbálja.";
+      status.classList.add("load-error");
+      throw error;
+    }
+  })();
+  try { return await entriesLoadPromise; }
+  finally { entriesLoadPromise = null; }
+}
 function scheduleEntriesRefresh() { clearTimeout(realtimeRefreshTimer); realtimeRefreshTimer=setTimeout(()=>refreshEntries().catch(()=>{}),700); }
 function today() { const d=new Date(), off=d.getTimezoneOffset(); return new Date(d.getTime()-off*60000).toISOString().slice(0,10); }
 function money(value) { return new Intl.NumberFormat("hu-HU",{style:"currency",currency:"HUF",maximumFractionDigits:0}).format(Number(value)||0); }
@@ -42,7 +70,7 @@ function isLockedDate(value){if(!value)return false;const cutoff=new Date();cuto
 function requestHistoricalPin(){const pin=prompt("Ez a tétel már lezárult. A módosításhoz add meg a feloldó PIN-kódot:");if(pin===null)return null;if(!/^\d{6}$/.test(pin.trim()))throw new Error("A feloldó PIN-kód 6 számjegyű.");return pin.trim();}
 function weekForOffset(offset=0){const base=new Date(),distance=(base.getDay()+2)%7;const start=new Date(base.getFullYear(),base.getMonth(),base.getDate()-distance+offset*7),end=new Date(start.getFullYear(),start.getMonth(),start.getDate()+6);return {start,end,startISO:isoDate(start),endISO:isoDate(end)};}
 function selectedWeek(){return weekForOffset(weekOffset);}
-function setFilterWeek(offset=filterWeekOffset){filterWeekOffset=offset;const week=weekForOffset(filterWeekOffset);$("#filterFrom").value=week.startISO;$("#filterTo").value=week.endISO;$("#filterWeekRange").textContent=`${formatDate(week.startISO)} – ${formatDate(week.endISO)}`;$("#nextFilterWeek").disabled=filterWeekOffset>=0;render();}
+function setFilterWeek(offset=filterWeekOffset, shouldRender=true){filterWeekOffset=offset;const week=weekForOffset(filterWeekOffset);$("#filterFrom").value=week.startISO;$("#filterTo").value=week.endISO;$("#filterWeekRange").textContent=`${formatDate(week.startISO)} – ${formatDate(week.endISO)}`;$("#nextFilterWeek").disabled=filterWeekOffset>=0;if(shouldRender)render();}
 function escapeHTML(value) { return String(value??"").replace(/[&<>'"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"}[c])); }
 function normalizedCustomerText(value){return String(value||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLocaleLowerCase("hu").trim();}
 function customerCategorySelected(){const direction=form.elements.direction.value,category=$("#categorySelect").value;return direction==="income"&&category==="Bevétel – ügyféltől"||direction==="expense"&&category==="Ügyfélkiadás";}
@@ -109,7 +137,7 @@ function updateInvoicePhotoField(){const camera=$("#invoiceCamera"),input=$("#in
 async function shareInvoicePhoto(){if(!pendingInvoiceShare)return;const {file,saved}=pendingInvoiceShare,status=$("#formStatus"),text=`${saved.leader} kasszája · ${formatDate(saved.date)} · ${money(saved.amount)}`,data={title:`${saved.leader} – számla`,text,files:[file]};if(isMobileDevice()&&navigator.share&&(!navigator.canShare||navigator.canShare({files:[file]}))){try{await navigator.share(data);status.textContent="✓ A számlakép megosztva.";pendingInvoiceShare=null;$("#sendInvoicePhoto").hidden=true;return;}catch(error){if(error.name==="AbortError"){status.textContent="A kép küldését megszakítottad. Újra megpróbálhatod.";return;}}}status.textContent=isMobileDevice()?"A telefon ezen böngészője nem tudja átadni a képet. Próbáld Chrome-ból vagy Safariból.":`A kiválasztott képet (${file.name}) kézzel csatold a Viber Számla csoportban.`;}
 async function requireInvoicePhotoShare(file,record){if(record.receipt!=="Számlás"||!isMobileDevice())return true;if(!file)throw new Error("Számlás tételnél kötelező lefotózni és elküldeni a számlát.");if(!navigator.share||navigator.canShare&&!navigator.canShare({files:[file]}))throw new Error("Ez a böngésző nem tudja elküldeni a fotót. Nyisd meg a Kasszát Chrome-ban vagy Safariban.");try{await navigator.share({title:`${record.leader} – számla`,text:`${record.leader} kasszája · ${formatDate(record.date)} · ${money(record.amount)}`,files:[file]});return true;}catch(error){if(error.name==="AbortError")throw new Error("A fotó elküldése megszakadt, ezért a tétel nem lett elmentve.");throw new Error("A fotót nem sikerült átadni a Vibernek, ezért a tétel nem lett elmentve.");}}
 async function openApp(nextSession) {
-  session=nextSession;rememberedSession=nextSession;
+  session=nextSession;rememberedSession=nextSession;entryCache=[];
   if(nextSession.role==="manager"&&!nextSession.actingManager){managerIdentity=nextSession;KasszaDB.profiles().then(items=>profileDirectory=items).catch(()=>{});}
   welcomeView.hidden=true; appView.hidden=false;
   const admin=session.role==="admin",manager=session.role==="manager",hasStatistics=admin||manager;
@@ -123,9 +151,14 @@ async function openApp(nextSession) {
   $("#activeUser").textContent=admin?"Munkáltató":session.name;
   $("#switchUser").textContent=(manager||session.actingManager)?"Kijelentkezés / Név váltás":"Kijelentkezés";
   $("#viewTitle").textContent=admin?"Kassza áttekintő":`Szia, ${session.name}!`;
-  if(hasStatistics)setFilterWeek(filterWeekOffset);
+  if(hasStatistics)setFilterWeek(filterWeekOffset,false);
+  ["balanceValue","incomeValue","expenseValue","ownCashValue","weeklyIncome","weeklyExpense","weeklyBalance","weeklyInvoiced","weeklyUninvoiced","tableTotalIncome","tableTotalExpense","tableTotalBalance"].forEach(id=>$("#"+id).textContent="—");
+  $("#recentEntries").replaceChildren();
+  $("#entriesTable").replaceChildren();
+  $("#dataLoadStatus").textContent="A kassza adatainak betöltése…";
+  $("#dataLoadStatus").classList.remove("load-error");
   loadCustomers();
-  await refreshEntries();
+  try { await refreshEntries(); } catch (_) { /* A hiba látható, újrapróbálás a kapcsolat visszatérésekor. */ }
 }
 function switchUser() { resetEntryEditor();showAllOwnEntries=false;showAllPeriods=false;weekOffset=0;localStorage.removeItem(ACTIVE_CASH_KEY);session=null;entryCache=[];document.body.classList.remove("manager-statistics","manager-own");appView.hidden=true;welcomeView.hidden=false;$("#profileSelect").value="";$("#selectedProfileName").textContent="Név kiválasztása";$("#pinField").value="";$("#pinFieldWrap").hidden=true;$("#profileButtons").hidden=true;$("#profileDropdownButton").setAttribute("aria-expanded","false");$("#profileButtons").querySelectorAll(".profile-button").forEach(button=>button.classList.remove("active"));$("#enterButton").disabled=true;}
 async function openManagerCash(name){if(!profileDirectory.length)profileDirectory=await KasszaDB.profiles();const target=profileDirectory.find(item=>item.name===name);if(!target)throw new Error("A kassza nem található.");localStorage.setItem(ACTIVE_CASH_KEY,name);if(name===managerIdentity.name)return openApp(managerIdentity);return openApp({...target,actingManager:true,managerName:managerIdentity.name});}
@@ -166,6 +199,9 @@ function printOwnCash(){const previousShowAll=showAllOwnEntries,oldTitle=documen
 function weeklyShareData(){const week=selectedWeek(),own=entries().filter(item=>item.leader===session.name&&item.date>=week.startISO&&item.date<=week.endISO).sort((a,b)=>a.date.localeCompare(b.date)||a.createdAt.localeCompare(b.createdAt)),sum=totals(own),invoiced=own.filter(item=>item.direction==="expense"&&item.receipt==="Számlás").reduce((total,item)=>total+Number(item.amount),0),uninvoiced=own.filter(item=>item.direction==="expense"&&item.receipt==="Nem számlás").reduce((total,item)=>total+Number(item.amount),0),details=own.length?own.map(item=>{const description=[item.category,item.transferType,item.designation,item.partner,item.address,item.receipt,item.note].filter(Boolean).filter((value,index,array)=>array.indexOf(value)===index).join(" · ");return `${formatDate(item.date)} | ${item.direction==="income"?"Bevétel":"Kiadás"} | ${item.direction==="income"?"+":"−"}${money(item.amount)}${description?` | ${description}`:""}`;}):["Nincs bejegyzés ezen a héten."];return {subject:`${session.name} heti kasszája – ${week.startISO}–${week.endISO}`,text:[`${session.name} heti kasszája`,`${formatDate(week.startISO)} – ${formatDate(week.endISO)}`,"",...details,"","Heti összesítés",`Bevétel: ${money(sum.income)}`,`Kiadás: ${money(sum.expense)}`,`Számlás kiadás: ${money(invoiced)}`,`Nem számlás kiadás: ${money(uninvoiced)}`,`Heti záróegyenleg: ${money(sum.income-sum.expense)}`].join("\n")};}
 function showShareThanks(){sessionStorage.setItem("kassza-share-thanks","1");const status=$("#shareStatus");status.textContent="Köszönöm, hogy elküldted a kasszát. 😊 Nagyon cuki vagy ❤️";}
 document.addEventListener("visibilitychange",()=>{if(!document.hidden&&sessionStorage.getItem("kassza-share-thanks")==="1"){const status=$("#shareStatus");if(status){status.textContent="Köszönöm, hogy elküldted a kasszát. 😊 Nagyon cuki vagy ❤️";setTimeout(()=>{status.textContent="";sessionStorage.removeItem("kassza-share-thanks");},10000);}}});
+document.addEventListener("visibilitychange",()=>{if(!document.hidden&&session)refreshEntries().catch(()=>{});});
+window.addEventListener("online",()=>{if(session)refreshEntries().catch(()=>{});});
+window.addEventListener("pageshow",event=>{if(event.persisted&&session)refreshEntries().catch(()=>{});});
 async function shareViber(){const data=weeklyShareData(),mobile=isMobileDevice();if(mobile&&navigator.share){try{await navigator.share({title:data.subject,text:data.text});return;}catch(error){if(error.name==="AbortError")return;}}$("#shareStatus").textContent="A Viber megnyílik. Ellenőrizd az üzenetet, majd te nyomd meg a Küldés gombot.";location.href=`viber://forward?text=${encodeURIComponent(data.text)}`;}
 function shareEmail(){const data=weeklyShareData(),recipient="info@diszkertek.hu",mobile=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent),url=mobile?`mailto:${recipient}?subject=${encodeURIComponent(data.subject)}&body=${encodeURIComponent(data.text)}`:`https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(recipient)}&su=${encodeURIComponent(data.subject)}&body=${encodeURIComponent(data.text)}`;showShareThanks();if(mobile)location.href=url;else window.open(url,"_blank","noopener,noreferrer");}
 
@@ -220,9 +256,9 @@ window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();installProm
 function installMessage(text){const status=$("#installStatus");status.textContent=text;clearTimeout(installMessage.timer);installMessage.timer=setTimeout(()=>status.textContent="",5000);}
 window.addEventListener("appinstalled",()=>{installPrompt=null;installMessage("✓ Az alkalmazás telepítve.");syncInstallButton();});
 $("#installButton").addEventListener("click",async()=>{if(isInstalled()){installMessage("✓ Az alkalmazás már telepítve van.");syncInstallButton();return;}if(installPrompt){installMessage("Telepítési ablak megnyitva…");await installPrompt.prompt();const choice=await installPrompt.userChoice;if(choice.outcome==="accepted"){installMessage("✓ Az alkalmazás telepítve.");$("#installButton").hidden=true;}else installMessage("A telepítés megszakítva.");installPrompt=null;return;}installMessage("A böngészőből kell telepíteni.");$("#installHelpDialog").showModal();});
-async function updateApp(button){button.disabled=true;button.textContent="Frissítés…";try{if("caches" in window){const keys=await caches.keys();await Promise.all(keys.filter(key=>key.startsWith("diszkertek-kassza-")).map(key=>caches.delete(key)));}if("serviceWorker" in navigator){const registration=await navigator.serviceWorker.getRegistration();if(registration){await registration.update();if(registration.waiting)registration.waiting.postMessage({type:"SKIP_WAITING"});}}}catch(_){/* Az újratöltés ettől még biztonságosan elvégezhető. */}button.textContent="✓ Frissítve";button.classList.add("update-success");setTimeout(()=>{const url=new URL(location.href);url.searchParams.set("app-version","87");location.replace(url.href);},900);}
+async function updateApp(button){button.disabled=true;button.textContent="Frissítés…";try{if("caches" in window){const keys=await caches.keys();await Promise.all(keys.filter(key=>key.startsWith("diszkertek-kassza-")).map(key=>caches.delete(key)));}if("serviceWorker" in navigator){const registration=await navigator.serviceWorker.getRegistration();if(registration){await registration.update();if(registration.waiting)registration.waiting.postMessage({type:"SKIP_WAITING"});}}}catch(_){/* Az újratöltés ettől még biztonságosan elvégezhető. */}button.textContent="✓ Frissítve";button.classList.add("update-success");setTimeout(()=>{const url=new URL(location.href);url.searchParams.set("app-version","88");location.replace(url.href);},900);}
 [$("#updateButton"),$("#updateButtonMobile")].forEach(button=>button.addEventListener("click",()=>updateApp(button)));
-if("serviceWorker" in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("service-worker.js?v=87",{updateViaCache:"none"}));
+if("serviceWorker" in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("service-worker.js?v=88",{updateViaCache:"none"}).then(registration=>registration.update()).catch(()=>{}));
 syncInstallButton();
 if(!KasszaDB.configured)$("#loginStatus").textContent="A közös adatbázis beállítása szükséges.";
-else restorePromise=KasszaDB.restore().then(async saved=>{if(saved){rememberedSession=saved;await openApp(saved);const activeCash=localStorage.getItem(ACTIVE_CASH_KEY);if(saved.role==="manager"&&activeCash&&activeCash!==saved.name)await openManagerCash(activeCash);KasszaDB.subscribe(scheduleEntriesRefresh);}}).catch(()=>{});
+else restorePromise=retryRead(()=>KasszaDB.restore()).then(async saved=>{if(saved){rememberedSession=saved;await openApp(saved);const activeCash=localStorage.getItem(ACTIVE_CASH_KEY);if(saved.role==="manager"&&activeCash&&activeCash!==saved.name)await openManagerCash(activeCash);KasszaDB.subscribe(scheduleEntriesRefresh);}}).catch(()=>{$("#loginStatus").textContent="Nem sikerült visszaállítani a belépést. Ellenőrizd az internetkapcsolatot, majd próbáld újra.";});
