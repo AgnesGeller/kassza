@@ -31,6 +31,7 @@ let customerNames = [];
 let selectedCustomerName = "";
 let customerListState = "idle";
 let customerLoadPromise = null;
+let managerEditingId = null;
 
 function readJSON(key, fallback) { try { return JSON.parse(localStorage.getItem(key)) ?? fallback; } catch (_) { return fallback; } }
 function entries() { return entryCache; }
@@ -85,7 +86,7 @@ async function loadCustomers(force=false){
   customerListState="loading";
   if(customerCategorySelected())renderCustomerOptions();
   customerLoadPromise=(async()=>{
-    try{customerNames=await retryRead(()=>KasszaDB.customers());customerListState="ready";}
+    try{customerNames=await retryRead(()=>KasszaDB.customers());customerListState="ready";$("#managerCustomerNames").innerHTML=customerNames.map(name=>`<option value="${escapeHTML(name)}"></option>`).join("");}
     catch(_){customerListState=customerNames.length?"ready":"error";}
     if(customerCategorySelected())renderCustomerOptions();
   })();
@@ -156,6 +157,7 @@ async function openApp(nextSession) {
   managerView=manager&&localStorage.getItem(MANAGER_VIEW_KEY)==="own"?"own":"statistics";
   syncManagerTheme();
   $("#managerTabs").hidden=!manager;
+  $("#managerCashCard").hidden=!manager;
   $("#workerPanel").hidden=admin||(manager&&managerView==="statistics"); $("#adminPanel").hidden=!hasStatistics||(manager&&managerView==="own");
   $("#managerStatsTab").classList.toggle("active",manager&&managerView==="statistics");
   $("#managerEntryTab").classList.toggle("active",manager&&managerView==="own");
@@ -199,7 +201,48 @@ function renderTable(list) {
   const sum=totals(sorted);$("#tableTotalIncome").textContent=money(sum.income);$("#tableTotalExpense").textContent=money(sum.expense);$("#tableTotalBalance").textContent=money(sum.income-sum.expense);
   $("#emptyTable").hidden=sorted.length>0;
 }
-function render() { if(!session)return; const list=filteredEntries(); if(session.role==="admin"){renderSummary(list);renderTable(list);}else if(session.role==="manager"){const own=entries().filter(item=>item.leader===session.name);renderSummary(managerView==="own"?own:list);renderRecent(own);renderTable(list);$("#balanceLabel").textContent=managerView==="own"?"Kasszámban":"Teljes kassza";}else{renderSummary(list);renderRecent(list);$("#balanceLabel").textContent="Kasszámban";} }
+function managerWeeklyData(respectLeaderFilter=true){
+  const from=$("#filterFrom").value,to=$("#filterTo").value,selectedLeader=$("#filterLeader").value;
+  return LEADERS.filter(name=>!respectLeaderFilter||!selectedLeader||name===selectedLeader).map(name=>{
+    const all=entries().filter(item=>item.leader===name),weekly=all.filter(item=>(!from||item.date>=from)&&(!to||item.date<=to));
+    const weekTotals=totals(weekly),allTotals=totals(all);
+    return {name,weekly:[...weekly].sort((a,b)=>b.date.localeCompare(a.date)||String(b.createdAt||"").localeCompare(String(a.createdAt||""))),income:weekTotals.income,expense:weekTotals.expense,weekBalance:weekTotals.income-weekTotals.expense,cash:allTotals.income-allTotals.expense};
+  });
+}
+function renderManagerCashOverview(){
+  const card=$("#managerCashCard"),target=$("#managerCashOverview");
+  if(session?.role!=="manager"||managerView!=="statistics"){card.hidden=true;target.replaceChildren();return;}
+  card.hidden=false;const from=$("#filterFrom").value,to=$("#filterTo").value;
+  $("#managerCashPeriod").textContent=from&&to?`${formatDate(from)} – ${formatDate(to)}`:"A kiválasztott időszak";
+  const people=managerWeeklyData(),distributedCash=managerWeeklyData(false).reduce((sum,person)=>sum+person.cash,0);
+  target.innerHTML=`<div class="manager-distribution-total"><span>Teljes kassza jelenlegi összege</span><strong>${money(distributedCash)}</strong></div>`+people.map(person=>`<details class="manager-person">
+    <summary><span class="manager-person-name"><b>${escapeHTML(person.name)}</b><small>Heti részletek megnyitása</small></span><span class="manager-person-cash"><small>Kasszában lévő pénz</small><b>${money(person.cash)}</b></span></summary>
+    <div class="manager-person-body"><div class="manager-person-totals"><span><small>Heti bevétel</small><b class="income">${money(person.income)}</b></span><span><small>Heti kiadás</small><b class="expense">${money(person.expense)}</b></span><span><small>Heti összesítő</small><b>${money(person.weekBalance)}</b></span><span><small>Kasszában lévő pénz</small><b>${money(person.cash)}</b></span></div>
+    <div class="manager-week-actions"><button class="button button-primary" type="button" data-manager-add="${escapeHTML(person.name)}">＋ Tétel hozzáadása ehhez a héthez</button></div>
+    <div class="manager-week-list">${person.weekly.length?person.weekly.map(item=>`<div class="manager-week-row"><span class="entry-symbol ${item.direction}">${item.direction==="income"?"+":"−"}</span><span class="manager-week-info"><b>${escapeHTML(item.designation||item.transferType||item.partner||item.category)}</b><small>${formatDate(item.date)} · ${escapeHTML(item.category)}${item.receipt?` · ${escapeHTML(item.receipt)}`:""}${isLockedDate(item.date)?" · 🔒 Lezárva":""}</small></span><b class="entry-amount ${item.direction}">${item.direction==="income"?"+":"−"}${money(item.amount)}</b><span class="entry-actions">${item.sourceType?"<small>Külső elszámolás kezeli</small>":`<button class="entry-action" type="button" data-manager-edit="${item.id}" aria-label="Szerkesztés">✎</button><button class="entry-action delete" type="button" data-manager-delete="${item.id}" aria-label="Törlés">✕</button>`}</span></div>`).join(""):`<div class="empty-list">Ezen a héten nincs tétel.</div>`}</div></div>
+  </details>`).join("");
+}
+function managerCustomerCategory(){const direction=$("#managerDirectionField").value,category=$("#managerCategoryField").value;return direction==="income"&&category==="Bevétel – ügyféltől"||direction==="expense"&&category==="Ügyfélkiadás";}
+function updateManagerEntryFields(){
+  const direction=$("#managerDirectionField").value,category=$("#managerCategoryField").value,coworker=category.includes("munkatárstól")||category.includes("munkatársnak"),operating=direction==="expense"&&category==="Működési költség",other=category==="Egyéb bevétel"||category==="Egyéb kiadás",coworkerTransfer=direction==="expense"&&category==="Pénzátadás – munkatársnak",hideDesignation=direction==="income"&&(category==="Bevétel – ügyféltől"||category==="Pénzátvétel – munkatárstól")||coworkerTransfer,receiptAvailable=direction==="expense"&&!coworkerTransfer||direction==="income"&&category==="Egyéb bevétel",partner=$("#managerPartnerField");
+  $("#managerPartnerLabel").textContent=coworker?"Munkatárs neve":"Ügyfél neve";$("#managerPartnerWrap").hidden=operating||other;partner.required=!operating&&!other;partner.disabled=operating||other;
+  if(managerCustomerCategory())partner.setAttribute("list","managerCustomerNames");else partner.removeAttribute("list");
+  $("#managerDesignationWrap").hidden=hideDesignation;$("#managerDesignationField").disabled=hideDesignation;$("#managerDesignationField").required=!hideDesignation;
+  $("#managerReceiptWrap").hidden=!receiptAvailable;$("#managerReceiptField").disabled=!receiptAvailable;$("#managerReceiptField").required=receiptAvailable;
+  $("#managerTransferWrap").hidden=!coworkerTransfer;$("#managerTransferField").disabled=!coworkerTransfer;$("#managerTransferField").required=coworkerTransfer;
+}
+function updateManagerCategories(selected=""){const direction=$("#managerDirectionField").value,select=$("#managerCategoryField");select.innerHTML=CATEGORIES[direction].map(category=>`<option>${escapeHTML(category)}</option>`).join("");if(selected&&![...select.options].some(option=>option.value===selected))select.add(new Option(selected,selected));if(selected)select.value=selected;updateManagerEntryFields();}
+async function openManagerEntry(leader,id=""){
+  if(session?.role!=="manager")return;const item=id?entries().find(entry=>entry.id===id):null;if(id&&!item||item?.sourceType)return;
+  managerEditingId=item?.id||null;const dialog=$("#managerEntryDialog"),formElement=$("#managerEntryForm");formElement.reset();$("#managerEntryStatus").textContent="";
+  if(!profileDirectory.length)try{profileDirectory=await KasszaDB.profiles();}catch(_){$("#managerCashStatus").textContent="A kasszák névsora most nem tölthető be.";return;}
+  $("#managerLeaderField").innerHTML=profileDirectory.filter(profile=>LEADERS.includes(profile.name)).map(profile=>`<option>${escapeHTML(profile.name)}</option>`).join("");
+  $("#managerLeaderField").value=item?.leader||leader;$("#managerLeaderField").disabled=Boolean(item);$("#managerDateField").value=item?.date||(today()>=$("#filterFrom").value&&today()<=$("#filterTo").value?today():$("#filterFrom").value||today());$("#managerDirectionField").value=item?.direction||"income";updateManagerCategories(item?.category||"");
+  $("#managerDesignationField").value=item?.designation||"";$("#managerAmountField").value=item?.amount||"";$("#managerPartnerField").value=item?.partner||"";$("#managerReceiptField").value=item?.receipt||"";$("#managerTransferField").value=item?.transferType||"";$("#managerNoteField").value=item?.note||"";
+  $("#managerEntryTitle").textContent=item?`${item.leader} tételének szerkesztése`:`${leader} – új tétel`;$("#saveManagerEntry").textContent=item?"Módosítás mentése":"Tétel mentése";dialog.showModal();
+}
+function closeManagerEntry(){managerEditingId=null;$("#managerEntryDialog").close();}
+function render() { if(!session)return; const list=filteredEntries(); if(session.role==="admin"){renderSummary(list);renderTable(list);}else if(session.role==="manager"){const own=entries().filter(item=>item.leader===session.name);renderSummary(managerView==="own"?own:list);renderRecent(own);renderTable(list);renderManagerCashOverview();$("#balanceLabel").textContent=managerView==="own"?"Kasszámban":"Teljes kassza";}else{renderSummary(list);renderRecent(list);$("#balanceLabel").textContent="Kasszámban";} }
 
 function exportCSV() {
   const rows=[["Dátum","Csoportvezető","Típus","Kategória","Pénzátadás típusa","Megnevezés","Bizonylat","Összeg (Ft)","Ügyfél / munkatárs","Ügyfél címe","Megjegyzés"],...filteredEntries().map(x=>[formatDate(x.date),x.leader,x.direction==="income"?"Bevétel":"Kiadás",x.category,x.transferType,x.designation,x.receipt,x.amount,x.partner,x.address,x.note])];
@@ -254,6 +297,16 @@ $("#takeInvoicePhoto").addEventListener("click",()=>{$("#photoSourceDialog").clo
 $("#browseInvoicePhoto").addEventListener("click",()=>{$("#photoSourceDialog").close();$("#invoicePhoto").click();});
 $("#cancelEdit").addEventListener("click",()=>resetEntryEditor(form.elements.direction.value));
 $("#recentEntries").addEventListener("click",e=>{const editButton=e.target.closest("[data-edit-own]"),deleteButton=e.target.closest("[data-delete-own]");if(editButton)editOwnEntry(editButton.dataset.editOwn);if(deleteButton){const item=entries().find(entry=>entry.id===deleteButton.dataset.deleteOwn&&entry.leader===session?.name);if(!item)return;pendingDeleteId=item.id;$("#confirmDialog").showModal();}});
+$("#managerCashOverview").addEventListener("click",e=>{const add=e.target.closest("[data-manager-add]"),edit=e.target.closest("[data-manager-edit]"),remove=e.target.closest("[data-manager-delete]");if(add)openManagerEntry(add.dataset.managerAdd);if(edit)openManagerEntry("",edit.dataset.managerEdit);if(remove){const item=entries().find(entry=>entry.id===remove.dataset.managerDelete);if(!item||item.sourceType||session?.role!=="manager")return;pendingDeleteId=item.id;$("#confirmDialog").showModal();}});
+$("#closeManagerEntry").addEventListener("click",closeManagerEntry);$("#cancelManagerEntry").addEventListener("click",closeManagerEntry);
+$("#managerDirectionField").addEventListener("change",()=>updateManagerCategories());$("#managerCategoryField").addEventListener("change",updateManagerEntryFields);
+$("#managerEntryForm").addEventListener("submit",async e=>{
+  e.preventDefault();if(session?.role!=="manager")return;const formElement=e.currentTarget,status=$("#managerEntryStatus"),submit=$("#saveManagerEntry"),existing=managerEditingId?entries().find(item=>item.id===managerEditingId):null,leader=existing?.leader||$("#managerLeaderField").value,profile=profileDirectory.find(item=>item.name===leader),category=$("#managerCategoryField").value,partner=$("#managerPartnerField").disabled?"":$("#managerPartnerField").value.trim();
+  status.textContent="";if(!formElement.reportValidity())return;if(!profile){status.textContent="A kiválasztott kassza nem érhető el.";return;}
+  if(managerCustomerCategory()&&!(customerListState==="ready"&&customerNames.includes(partner)||existing?.partner===partner)){status.textContent=customerListState==="error"?"Az ügyféllista jelenleg nem érhető el.":"Ügyféltételnél válassz nevet az ügyféllistából.";$("#managerPartnerField").focus();return;}
+  const record={leader,direction:$("#managerDirectionField").value,category,transferType:$("#managerTransferField").disabled?"":$("#managerTransferField").value,designation:$("#managerDesignationField").disabled?"":$("#managerDesignationField").value.trim(),receipt:$("#managerReceiptField").disabled?"":$("#managerReceiptField").value,date:$("#managerDateField").value,amount:Number($("#managerAmountField").value),partner,address:existing?.address||"",note:$("#managerNoteField").value.trim()};
+  submit.disabled=true;submit.textContent="Mentés…";try{const locked=isLockedDate(record.date)||Boolean(existing&&isLockedDate(existing.date)),overridePin=locked?requestHistoricalPin():"";if(locked&&overridePin===null){status.textContent="A módosítás megszakítva.";return;}const saved=existing?await KasszaDB.update(existing.id,record,existing.userId,overridePin):await KasszaDB.create(record,profile.userId,overridePin);if(saved.leader!==leader||saved.userId!==profile.userId)throw new Error("A tétel nem a kiválasztott kasszába került.");if(existing)entryCache=entryCache.map(item=>item.id===saved.id?saved:item);else entryCache=[saved,...entryCache];closeManagerEntry();$("#managerCashStatus").textContent=`✓ ${leader} kasszája frissült.`;render();setTimeout(()=>{$("#managerCashStatus").textContent="";},7000);}catch(error){status.textContent=`Nem sikerült menteni: ${error.message}`;}finally{submit.disabled=false;submit.textContent=existing?"Módosítás mentése":"Tétel mentése";}
+});
 [$("#filterLeader"),$("#filterDirection"),$("#filterTransfers")].forEach(el=>el.addEventListener("change",render));$("#filterFrom").addEventListener("change",()=>{$("#filterWeekRange").textContent="Egyéni időszak";render();});$("#filterTo").addEventListener("change",()=>{$("#filterWeekRange").textContent="Egyéni időszak";render();});$("#filterText").addEventListener("input",render);
 $("#previousFilterWeek").addEventListener("click",()=>setFilterWeek(filterWeekOffset-1));$("#nextFilterWeek").addEventListener("click",()=>setFilterWeek(filterWeekOffset+1));
 $("#clearFilters").addEventListener("click",()=>{$("#filterLeader").value="";$("#filterDirection").value="";$("#filterTransfers").value="";$("#filterText").value="";setFilterWeek(0);});
@@ -269,9 +322,9 @@ window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();installProm
 function installMessage(text){const status=$("#installStatus");status.textContent=text;clearTimeout(installMessage.timer);installMessage.timer=setTimeout(()=>status.textContent="",5000);}
 window.addEventListener("appinstalled",()=>{installPrompt=null;installMessage("✓ Az alkalmazás telepítve.");syncInstallButton();});
 $("#installButton").addEventListener("click",async()=>{if(isInstalled()){installMessage("✓ Az alkalmazás már telepítve van.");syncInstallButton();return;}if(installPrompt){installMessage("Telepítési ablak megnyitva…");await installPrompt.prompt();const choice=await installPrompt.userChoice;if(choice.outcome==="accepted"){installMessage("✓ Az alkalmazás telepítve.");$("#installButton").hidden=true;}else installMessage("A telepítés megszakítva.");installPrompt=null;return;}installMessage("A böngészőből kell telepíteni.");$("#installHelpDialog").showModal();});
-async function updateApp(button){button.disabled=true;button.textContent="Frissítés…";try{if("caches" in window){const keys=await caches.keys();await Promise.all(keys.filter(key=>key.startsWith("diszkertek-kassza-")).map(key=>caches.delete(key)));}if("serviceWorker" in navigator){const registration=await navigator.serviceWorker.getRegistration();if(registration){await registration.update();if(registration.waiting)registration.waiting.postMessage({type:"SKIP_WAITING"});}}}catch(_){/* Az újratöltés ettől még biztonságosan elvégezhető. */}button.textContent="✓ Frissítve";button.classList.add("update-success");setTimeout(()=>{const url=new URL(location.href);url.searchParams.set("app-version","89");location.replace(url.href);},900);}
+async function updateApp(button){button.disabled=true;button.textContent="Frissítés…";try{if("caches" in window){const keys=await caches.keys();await Promise.all(keys.filter(key=>key.startsWith("diszkertek-kassza-")).map(key=>caches.delete(key)));}if("serviceWorker" in navigator){const registration=await navigator.serviceWorker.getRegistration();if(registration){await registration.update();if(registration.waiting)registration.waiting.postMessage({type:"SKIP_WAITING"});}}}catch(_){/* Az újratöltés ettől még biztonságosan elvégezhető. */}button.textContent="✓ Frissítve";button.classList.add("update-success");setTimeout(()=>{const url=new URL(location.href);url.searchParams.set("app-version","90");location.replace(url.href);},900);}
 [$("#updateButton"),$("#updateButtonMobile")].forEach(button=>button.addEventListener("click",()=>updateApp(button)));
-if("serviceWorker" in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("service-worker.js?v=89",{updateViaCache:"none"}).then(registration=>registration.update()).catch(()=>{}));
+if("serviceWorker" in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("service-worker.js?v=90",{updateViaCache:"none"}).then(registration=>registration.update()).catch(()=>{}));
 syncInstallButton();
 if(!KasszaDB.configured)$("#loginStatus").textContent="A közös adatbázis beállítása szükséges.";
 else restorePromise=retryRead(()=>KasszaDB.restore()).then(async saved=>{if(saved){rememberedSession=saved;await openApp(saved);const activeCash=localStorage.getItem(ACTIVE_CASH_KEY);if(saved.role==="manager"&&activeCash&&activeCash!==saved.name)await openManagerCash(activeCash);KasszaDB.subscribe(scheduleEntriesRefresh);}}).catch(()=>{$("#loginStatus").textContent="Nem sikerült visszaállítani a belépést. Ellenőrizd az internetkapcsolatot, majd próbáld újra.";});

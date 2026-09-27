@@ -22,7 +22,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
-  <link rel="stylesheet" href="styles.css?v=89">
+  <link rel="stylesheet" href="styles.css?v=90">
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
   <link rel="preconnect" href="https://wojgdfojupnfldrmqaht.supabase.co" crossorigin>
   <title>Kassza – Díszkertek</title>
@@ -116,6 +116,10 @@
             <label class="field search-field"><span>Ügyfél, cím vagy megjegyzés</span><input id="filterText" type="search"></label>
           </div>
         </article>
+        <article id="managerCashCard" class="card manager-cash-card" hidden>
+          <div class="section-heading"><div><p class="eyebrow">IRODAI NÉZET</p><h2>Heti kasszák személyenként</h2><small id="managerCashPeriod"></small></div><p id="managerCashStatus" class="manager-cash-status" role="status" aria-live="polite"></p></div>
+          <div id="managerCashOverview" class="manager-cash-overview"></div>
+        </article>
         <article class="card table-card">
           <div class="section-heading"><div><h2>Részletes lista</h2></div><div class="backup-actions"><button id="pdfButton" class="button button-soft" type="button">PDF mentés</button><button id="exportButton" class="button button-soft" type="button">Szűrt lista CSV-ben</button><button id="backupButton" class="button button-soft" type="button">Biztonsági mentés</button></div></div>
           <div class="table-wrap"><table><thead><tr><th>Dátum</th><th>Csoportvezető</th><th>Típus</th><th>Kategória</th><th>Ügyfél / részlet</th><th class="number">Összeg</th><th></th></tr></thead><tbody id="entriesTable"></tbody></table></div>
@@ -127,12 +131,32 @@
   </div>
 
   <dialog id="confirmDialog"><form method="dialog"><h2>Törlöd a bejegyzést?</h2><div class="dialog-actions"><button class="button button-soft" value="cancel">Mégse</button><button id="confirmDelete" class="button button-danger" value="default">Törlés</button></div></form></dialog>
+  <dialog id="managerEntryDialog" class="manager-entry-dialog">
+    <form id="managerEntryForm">
+      <button id="closeManagerEntry" class="dialog-close" type="button" aria-label="Bezárás">×</button>
+      <p class="eyebrow">IRODAI MÓDOSÍTÁS</p><h2 id="managerEntryTitle">Tétel hozzáadása</h2>
+      <div class="manager-entry-grid">
+        <label class="field"><span>Kassza</span><select id="managerLeaderField" required></select></label>
+        <label class="field"><span>Dátum</span><input id="managerDateField" type="date" required></label>
+        <label class="field"><span>Típus</span><select id="managerDirectionField" required><option value="income">Bevétel</option><option value="expense">Kiadás</option></select></label>
+        <label class="field"><span>Kategória</span><select id="managerCategoryField" required></select></label>
+        <label id="managerPartnerWrap" class="field"><span id="managerPartnerLabel">Ügyfél neve</span><input id="managerPartnerField" autocomplete="off" list="managerCustomerNames"><datalist id="managerCustomerNames"></datalist></label>
+        <label id="managerDesignationWrap" class="field"><span>Megnevezés</span><input id="managerDesignationField"></label>
+        <label class="field"><span>Összeg</span><span class="manager-amount"><input id="managerAmountField" type="number" min="1" step="1" required><b>Ft</b></span></label>
+        <label id="managerReceiptWrap" class="field"><span>Bizonylat</span><select id="managerReceiptField"><option value="">Válassz…</option><option>Számlás</option><option>Nem számlás</option></select></label>
+        <label id="managerTransferWrap" class="field"><span>Pénzátadás típusa</span><select id="managerTransferField"><option value="">Válassz…</option><option>Fizetési előleg</option><option>Pénzátadás</option></select></label>
+        <label class="field full"><span>Megjegyzés</span><textarea id="managerNoteField" rows="2"></textarea></label>
+      </div>
+      <p id="managerEntryStatus" class="dialog-error" role="alert"></p>
+      <div class="dialog-actions"><button id="cancelManagerEntry" class="button button-soft" type="button">Mégse</button><button id="saveManagerEntry" class="button button-primary" type="submit">Mentés</button></div>
+    </form>
+  </dialog>
   <dialog id="photoSourceDialog"><form method="dialog"><button class="dialog-close" value="cancel" aria-label="Bezárás">×</button><h2>Számlakép hozzáadása</h2><div class="photo-source-actions"><button id="takeInvoicePhoto" class="button button-primary" type="button">Fénykép készítése</button><button id="browseInvoicePhoto" class="button button-soft" type="button">Kiválasztás a készülékről</button></div></form></dialog>
   <dialog id="installHelpDialog"><form method="dialog"><button class="dialog-close" value="cancel" aria-label="Bezárás">×</button><p class="eyebrow">ALKALMAZÁS TELEPÍTÉSE</p><h2>A böngészőből telepíthető</h2><p>A böngésző nem indította el automatikusan a telepítést.</p><p><b>Számítógép – Chrome:</b> jobb felső három pont → „Átküldés, mentés és megosztás” → „Oldal telepítése alkalmazásként”.</p><p><b>Számítógép – Edge:</b> jobb felső három pont → „Alkalmazások” → „Webhely telepítése alkalmazásként”.</p><p><b>iPhone / iPad:</b> Safari → Megosztás → „Főképernyőhöz adás”.</p><p><b>Android:</b> Chrome menü → „Alkalmazás telepítése” vagy „Hozzáadás a kezdőképernyőhöz”.</p><button class="button button-primary full-button" value="cancel">Rendben</button></form></dialog>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="supabase-config.js?v=89"></script>
-  <script src="supabase-data.js?v=89"></script>
-  <script src="app.js?v=89"></script>
+  <script src="supabase-config.js?v=90"></script>
+  <script src="supabase-data.js?v=90"></script>
+  <script src="app.js?v=90"></script>
 </body>
 </html>
