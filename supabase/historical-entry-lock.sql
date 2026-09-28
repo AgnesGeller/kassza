@@ -1,4 +1,4 @@
--- A 14 napnál régebbi Kassza-tételek szerveroldali lezárása.
+-- A 14 napos vagy régebbi, illetve a 7 napos vagy későbbi Kassza-tételek szerveroldali védelme.
 -- A külön feloldó PIN hash-e csak a Supabase-ben tárolható; ebbe a fájlba nem kerül titok.
 
 begin;
@@ -33,6 +33,7 @@ drop policy if exists "entries_insert_own" on public.entries;
 create policy "entries_insert_own" on public.entries for insert to authenticated
 with check (
   entry_date > current_date - 14
+  and entry_date < current_date + 7
   and (
     (user_id = auth.uid() and leader_name = (select display_name from public.profiles where id = auth.uid()))
     or
@@ -44,10 +45,12 @@ drop policy if exists "entries_update" on public.entries;
 create policy "entries_update" on public.entries for update to authenticated
 using (
   entry_date > current_date - 14
+  and entry_date < current_date + 7
   and (user_id = auth.uid() or public.is_manager())
 )
 with check (
   entry_date > current_date - 14
+  and entry_date < current_date + 7
   and (user_id = auth.uid() or public.is_manager())
 );
 
@@ -89,8 +92,8 @@ begin
   if btrim(coalesce(p_entry->>'category', '')) = '' then raise exception 'A kategória kötelező.'; end if;
 
   if p_entry_id is null then
-    if requested_date > current_date - 14 then
-      raise exception 'Ez a dátum még nincs lezárva; használd a normál mentést.';
+    if requested_date > current_date - 14 and requested_date < current_date + 7 then
+      raise exception 'Ehhez a dátumhoz használd a normál mentést.';
     end if;
     if not (
       (p_user_id = auth.uid() and p_leader_name = (select display_name from public.profiles where id = auth.uid()))
@@ -114,8 +117,9 @@ begin
     if existing.user_id <> auth.uid() and not public.is_manager() then
       raise exception 'Nincs jogosultság ehhez a tételhez.' using errcode = '42501';
     end if;
-    if existing.entry_date > current_date - 14 and requested_date > current_date - 14 then
-      raise exception 'Ez a tétel még nincs lezárva; használd a normál mentést.';
+    if existing.entry_date > current_date - 14 and existing.entry_date < current_date + 7
+       and requested_date > current_date - 14 and requested_date < current_date + 7 then
+      raise exception 'Ehhez a dátumhoz használd a normál mentést.';
     end if;
 
     update public.entries set
@@ -160,4 +164,3 @@ revoke all on function public.delete_historical_cash_entry(uuid, text) from publ
 grant execute on function public.delete_historical_cash_entry(uuid, text) to authenticated;
 
 commit;
-
