@@ -11,6 +11,7 @@
 - automatikus kasszaegyenleg;
 - péntektől csütörtökig tartó heti bontás;
 - valós idejű, több készülék közötti Supabase-szinkronizálás;
+- célzott mobilértesítés, ha Ági vagy Tamás más személy kasszáját módosítja;
 - minden dolgozónak saját, péntek–csütörtök heti PDF-mentés;
 - vezetői szűrt PDF és CSV, valamint teljes JSON biztonsági mentés;
 - telepítés és alkalmazáson belüli frissítés.
