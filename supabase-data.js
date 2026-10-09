@@ -3,7 +3,7 @@
   const EMAILS = {
     "Ági": "agi@kassza.diszkertek.hu", "Bendegúz": "bendeguz@kassza.diszkertek.hu",
     "Ádám": "adam@kassza.diszkertek.hu", "Márk": "mark@kassza.diszkertek.hu",
-    "Tamás": "tamas@kassza.diszkertek.hu"
+    "Tamás": "tamas@kassza.diszkertek.hu", "Zsolti": "zsolti@kassza.diszkertek.hu"
   };
   const MANAGERS = new Set(["Ági", "Tamás"]);
   let client = null, channel = null;
