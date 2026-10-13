@@ -22,7 +22,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
-  <link rel="stylesheet" href="styles.css?v=98">
+  <link rel="stylesheet" href="styles.css?v=99">
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
   <link rel="preconnect" href="https://wojgdfojupnfldrmqaht.supabase.co" crossorigin>
   <title>Kassza – Díszkertek</title>
@@ -95,7 +95,7 @@
               <label id="receiptFieldWrap" class="field" hidden><span>Bizonylat</span><select id="receiptField" name="receipt" disabled><option value="">Válassz…</option><option>Számlás</option><option>Nem számlás</option></select></label>
               <div id="invoicePhotoWrap" class="field full invoice-photo-field" hidden><span>Számlakép csatolása</span><button id="chooseInvoicePhoto" class="button button-soft" type="button">Számlakép hozzáadása</button><small id="invoicePhotoHelp">A képet elkészítheted vagy kiválaszthatod a készülékről. Az alkalmazás nem tárolja.</small><input id="invoiceCamera" class="invoice-photo-input" name="invoiceCamera" type="file" accept="image/*" capture="environment" disabled><input id="invoicePhoto" class="invoice-photo-input" name="invoicePhoto" type="file" accept="image/*" disabled></div>
               <label id="transferTypeWrap" class="field" hidden><span>Pénzátadás típusa</span><select id="transferTypeField" name="transferType" disabled><option value="">Válassz…</option><option>Fizetési előleg</option><option>Pénzátadás</option></select></label>
-              <label id="partnerFieldWrap" class="field customer-picker"><span id="partnerLabel">Ügyfél neve</span><input id="partnerField" name="partner" autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="customerOptions" required><span id="customerOptions" class="customer-options" role="listbox" hidden></span><small id="customerHelp" class="customer-help" hidden></small><button id="addNewCustomer" class="button button-soft" type="button">＋ Új ügyfél</button></label>
+              <label id="partnerFieldWrap" class="field customer-picker"><span id="partnerLabel">Ügyfél neve</span><input id="partnerField" name="partner" autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="customerOptions" required><span id="customerOptions" class="customer-options" role="listbox" hidden></span><small id="customerHelp" class="customer-help" hidden></small></label>
               <label id="addressFieldWrap" class="field full"><span>Ügyfél címe</span><input id="addressField" name="address" autocomplete="street-address"></label>
               <label id="noteFieldWrap" class="field full"><span>Megjegyzés</span><textarea id="noteField" name="note" rows="2"></textarea></label>
             </div>
@@ -144,7 +144,7 @@
         <label class="field"><span>Dátum</span><input id="managerDateField" type="date" required></label>
         <label class="field"><span>Típus</span><select id="managerDirectionField" required><option value="income">Bevétel</option><option value="expense">Kiadás</option></select></label>
         <label class="field"><span>Kategória</span><select id="managerCategoryField" required></select></label>
-        <label id="managerPartnerWrap" class="field"><span id="managerPartnerLabel">Ügyfél neve</span><input id="managerPartnerField" autocomplete="off" list="managerCustomerNames"><datalist id="managerCustomerNames"></datalist><button id="addManagerCustomer" class="button button-soft" type="button">＋ Új ügyfél</button></label>
+        <label id="managerPartnerWrap" class="field"><span id="managerPartnerLabel">Ügyfél neve</span><input id="managerPartnerField" autocomplete="off" list="managerCustomerNames"><datalist id="managerCustomerNames"></datalist></label>
         <label id="managerDesignationWrap" class="field"><span>Megnevezés</span><input id="managerDesignationField"></label>
         <label class="field"><span>Összeg</span><span class="manager-amount"><input id="managerAmountField" type="number" min="1" step="1" required><b>Ft</b></span></label>
         <label id="managerReceiptWrap" class="field"><span>Bizonylat</span><select id="managerReceiptField"><option value="">Válassz…</option><option>Számlás</option><option>Nem számlás</option></select></label>
@@ -155,13 +155,12 @@
       <div class="dialog-actions"><button id="cancelManagerEntry" class="button button-soft" type="button">Mégse</button><button id="saveManagerEntry" class="button button-primary" type="submit">Mentés</button></div>
     </form>
   </dialog>
-  <dialog id="newCustomerDialog"><form id="newCustomerForm"><h2>Új ügyfél</h2><label class="field"><span>Ügyfél neve</span><input id="newCustomerName" required minlength="2" maxlength="160"></label><label class="field"><span>Cím (nem kötelező)</span><input id="newCustomerAddress" maxlength="500" autocomplete="street-address"></label><p id="newCustomerStatus" class="dialog-error" role="alert"></p><div class="dialog-actions"><button id="cancelNewCustomer" class="button button-soft" type="button">Mégse</button><button id="saveNewCustomer" class="button button-primary" type="submit">Ügyfél hozzáadása</button></div></form></dialog>
   <dialog id="photoSourceDialog"><form method="dialog"><button class="dialog-close" value="cancel" aria-label="Bezárás">×</button><h2>Számlakép hozzáadása</h2><div class="photo-source-actions"><button id="takeInvoicePhoto" class="button button-primary" type="button">Fénykép készítése</button><button id="browseInvoicePhoto" class="button button-soft" type="button">Kiválasztás a készülékről</button></div></form></dialog>
   <dialog id="installHelpDialog"><form method="dialog"><button class="dialog-close" value="cancel" aria-label="Bezárás">×</button><p class="eyebrow">ALKALMAZÁS TELEPÍTÉSE</p><h2>A böngészőből telepíthető</h2><p>A böngésző nem indította el automatikusan a telepítést.</p><p><b>Számítógép – Chrome:</b> jobb felső három pont → „Átküldés, mentés és megosztás” → „Oldal telepítése alkalmazásként”.</p><p><b>Számítógép – Edge:</b> jobb felső három pont → „Alkalmazások” → „Webhely telepítése alkalmazásként”.</p><p><b>iPhone / iPad:</b> Safari → Megosztás → „Főképernyőhöz adás”.</p><p><b>Android:</b> Chrome menü → „Alkalmazás telepítése” vagy „Hozzáadás a kezdőképernyőhöz”.</p><button class="button button-primary full-button" value="cancel">Rendben</button></form></dialog>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="supabase-config.js?v=98"></script>
-  <script src="supabase-data.js?v=98"></script>
-  <script src="app.js?v=98"></script>
+  <script src="supabase-config.js?v=99"></script>
+  <script src="supabase-data.js?v=99"></script>
+  <script src="app.js?v=99"></script>
 </body>
 </html>
