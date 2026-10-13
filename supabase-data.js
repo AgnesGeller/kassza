@@ -15,7 +15,7 @@
 
   const mapEntry = row => ({ id: row.id, userId: row.user_id, leader: row.leader_name,
     direction: row.direction, category: row.category, transferType: row.transfer_type,
-    designation: row.designation, receipt: row.receipt, vatRate: row.vat_rate==null?null:Number(row.vat_rate), date: row.entry_date,
+    designation: row.designation, receipt: row.receipt, vatRate: row.vat_rate==null?(row.receipt==="Számlás"?27:null):Number(row.vat_rate), date: row.entry_date,
     amount: Number(row.amount), partner: row.partner, address: row.address, note: row.note,
     sourceType: row.source_type || "", sourceId: row.source_id || "",
     createdAt: row.created_at, updatedAt: row.updated_at });
