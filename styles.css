@@ -95,3 +95,7 @@ body.manager-own .weekly-summary>span{border-color:#79ad83;background:#dcefe0}
 @media print{.manager-cash-card{display:none!important}}
 .manager-notification-panel{display:flex;align-items:center;justify-content:flex-end;gap:10px;margin:-10px 0 20px}.manager-notification-panel .button{padding:9px 13px}.manager-notification-panel small{color:var(--muted);font-weight:700}.manager-notification-panel small.error{color:var(--expense)}
 @media(max-width:540px){.manager-notification-panel{align-items:stretch;flex-direction:column;margin-top:-8px}.manager-notification-panel .button{min-height:44px}.manager-notification-panel small{text-align:center}}
+:root .new-customer-mark{color:#c62828;font-weight:800;font-size:1.15em}
+#newCustomerDialog{width:min(440px,calc(100vw - 32px));box-sizing:border-box}
+#newCustomerForm .field{margin-bottom:16px}
+#addNewCustomer,#addManagerCustomer{min-height:44px;margin-top:6px}
