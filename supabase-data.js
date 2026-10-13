@@ -15,7 +15,7 @@
 
   const mapEntry = row => ({ id: row.id, userId: row.user_id, leader: row.leader_name,
     direction: row.direction, category: row.category, transferType: row.transfer_type,
-    designation: row.designation, receipt: row.receipt, date: row.entry_date,
+    designation: row.designation, receipt: row.receipt, vatRate: row.vat_rate==null?null:Number(row.vat_rate), date: row.entry_date,
     amount: Number(row.amount), partner: row.partner, address: row.address, note: row.note,
     sourceType: row.source_type || "", sourceId: row.source_id || "",
     createdAt: row.created_at, updatedAt: row.updated_at });
@@ -61,6 +61,7 @@
     async alertProtectedAttempt(item, action) { const {data:auth,error:authError}=await client.auth.getSession();if(authError)throw authError;if(!auth.session)throw new Error("A munkamenet nem érhető el.");const {data,error}=await client.functions.invoke("cash-alerts",{headers:{Authorization:`Bearer ${auth.session.access_token}`},body:{action:"alert",attempt:{action,entryDate:item.date,direction:item.direction,amount:Number(item.amount)}}});if(error)throw error;return data; },
     async create(item, userId, overridePin="") { const row=toRow(item,userId);const {data,error}=overridePin?await client.rpc("save_historical_cash_entry",{p_entry_id:null,p_user_id:userId,p_leader_name:item.leader,p_entry:row,p_pin:overridePin}):await client.from("entries").insert(row).select().single();if(error)throw error;return mapEntry(data); },
     async update(id, item, userId, overridePin="") { const row=toRow(item,userId);delete row.user_id;delete row.leader_name;const {data,error}=overridePin?await client.rpc("save_historical_cash_entry",{p_entry_id:id,p_user_id:userId,p_leader_name:item.leader,p_entry:row,p_pin:overridePin}):await client.from("entries").update(row).eq("id",id).select().single();if(error)throw error;return mapEntry(data); },
+    async updateVat(id,rate,pin="") { const {data,error}=await client.rpc("set_cash_vat_rate",{p_entry_id:id,p_rate:rate,p_pin:pin});if(error)throw error;return mapEntry(data); },
     async remove(id, overridePin="") { const {error}=overridePin?await client.rpc("delete_historical_cash_entry",{p_entry_id:id,p_pin:overridePin}):await client.from("entries").delete().eq("id",id);if(error)throw error; },
     subscribe(onChange) { if (!client) return; if(channel)client.removeChannel(channel);channel=client.channel("kassza-live").on("postgres_changes",{event:"*",schema:"public",table:"entries"},onChange).subscribe(); }
   };
