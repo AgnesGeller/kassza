@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="hu"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Magyar dátummezők tesztje</title>
+<link rel="stylesheet" href="../styles.css"><body>
+<form id="fixture" style="max-width:320px"><label class="field"><span>Dátum</span><input id="date" name="date" type="date" required value="2026-10-15"></label></form>
+<label class="field" style="max-width:320px"><span>Dátumtól</span><input id="from" type="date"></label>
+<pre id="results">RUNNING</pre><script src="../hungarian-dates.js"></script><script>
+(async()=>{
+ const checks=[],assert=(condition,message)=>{if(!condition)throw Error(message);checks.push(message);};
+ const date=document.querySelector("#date"),from=document.querySelector("#from"),form=document.querySelector("#fixture");
+ const raw=Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,"value"),visible=input=>raw.get.call(input);
+ assert(visible(date)==="2026. 10. 15.","Magyar megjelenítés angol böngészőben is");
+ assert(date.value==="2026-10-15","ISO dátum a belső feldolgozáshoz");
+ assert(new FormData(form).get("date")==="2026-10-15","ISO dátum a FormData mentési folyamatban");
+ date.value="2024-02-29";assert(visible(date)==="2024. 02. 29."&&date.checkValidity(),"Érvényes szökőnap");
+ raw.set.call(date,"2026. 02. 29.");date.dispatchEvent(new Event("input",{bubbles:true}));assert(!date.checkValidity(),"Érvénytelen szökőnap tiltása");
+ raw.set.call(date,"2026. 10. 07.");date.dispatchEvent(new Event("input",{bubbles:true}));date.dispatchEvent(new Event("change",{bubbles:true}));
+ assert(date.value==="2026-10-07"&&date.checkValidity(),"Magyar kézi bevitel validálása");
+ raw.set.call(date,"20261015");date.dispatchEvent(new Event("input",{bubbles:true}));date.dispatchEvent(new Event("change",{bubbles:true}));
+ assert(date.value==="2026-10-15"&&visible(date)==="2026. 10. 15.","Mobilos számjegyes bevitel");
+ date.value="";assert(!date.checkValidity(),"Kötelező dátum ellenőrzése");
+ from.value="2026-06-07";assert(visible(from)==="2026. 06. 07."&&from.value==="2026-06-07","Dátumszűrő: az év-hónap-nap nem cserélődik fel");
+ let changes=0;from.addEventListener("change",()=>changes++);
+ const picker=from.parentElement.querySelector('input[type="date"]');picker.value="2026-10-20";picker.dispatchEvent(new Event("change",{bubbles:true}));
+ assert(from.value==="2026-10-20"&&visible(from)==="2026. 10. 20."&&changes===1,"Naptárválasztás frissíti a szűrőt");
+ raw.set.call(from,"15/10/2026");from.dispatchEvent(new Event("input",{bubbles:true}));from.dispatchEvent(new Event("change",{bubbles:true}));
+ assert(!from.checkValidity()&&changes===1,"Hibás dátum nem indít hibás szűrést");
+ form.reset();await Promise.resolve();
+ assert(date.value==="2026-10-15"&&visible(date)==="2026. 10. 15.","Űrlap visszaállítása");
+ date.min="2026-10-10";date.value="2026-10-09";assert(!date.checkValidity(),"Alsó dátumkorlát");
+ date.min="";date.value="2026-10-15";
+ assert(date.getBoundingClientRect().right<=window.innerWidth,"A dátummező elfér a képernyőn");
+ assert(KasszaDates.parseISO("1900. 02. 29.")===""&&KasszaDates.parseISO("2000. 02. 29.")==="2000-02-29","Évszázados szökőévek");
+ document.querySelector("#results").textContent="PASS "+checks.length+" ellenőrzés\n"+checks.join("\n");
+})().catch(error=>{document.querySelector("#results").textContent="FAIL "+error.message;});
+</script></body></html>

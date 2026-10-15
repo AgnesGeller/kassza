@@ -1,4 +1,5 @@
 import webpush from "npm:web-push@3.6.7";
+function formatCashDate(value: unknown) { return String(value ?? "").replace(/^(\d{4})-(\d{2})-(\d{2})$/, "$1. $2. $3."); }
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
@@ -133,7 +134,7 @@ async function processEntryEvent(eventId: string, keys: any) {
     subscriptions,
     {
       title: actionTitle[event.action] || "Kassza – változás",
-      body: `${event.actor_name} ${Number(event.amount).toLocaleString("hu-HU")} Ft ${kind} ${actionVerb[event.action] || "kezelt"} a kasszádban (${event.entry_date}).`,
+      body: `${event.actor_name} ${Number(event.amount).toLocaleString("hu-HU")} Ft ${kind} ${actionVerb[event.action] || "kezelt"} a kasszádban (${formatCashDate(event.entry_date)}).`,
       url: "./",
       tag: `cash-entry-${event.id}`,
     },
@@ -267,7 +268,7 @@ Deno.serve(async request => {
       subscriptions,
       {
         title: "Kassza – védett dátum",
-        body: `${profile.display_name} ${entryDate} dátummal próbált ${kind} ${verb} (${amount.toLocaleString("hu-HU")} Ft). A mentéshez vezetői PIN szükséges.`,
+        body: `${profile.display_name} ${formatCashDate(entryDate)} dátummal próbált ${kind} ${verb} (${amount.toLocaleString("hu-HU")} Ft). A mentéshez vezetői PIN szükséges.`,
         url: "./",
         tag: `cash-protected-${user.id}-${entryDate}`,
       },
