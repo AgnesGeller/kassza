@@ -56,6 +56,9 @@
 .share-note{display:block;margin:8px 3px 0;color:var(--muted);font-size:10px;line-height:1.35;text-align:center}
 .share-status{min-height:18px;margin:9px 0 0;color:var(--forest);font-size:12px;font-weight:700;line-height:1.4;text-align:center}
 .invoice-photo-field{position:relative}.invoice-photo-field small{display:block;margin-top:6px;color:var(--muted);font-size:11px}.invoice-photo-input{position:absolute;width:1px;height:1px;padding:0;border:0;opacity:0;pointer-events:none}.photo-source-actions{display:grid;gap:12px;margin-top:24px}.photo-source-actions .button{width:100%}
+#chooseInvoicePhoto,#browseInvoicePhoto{min-height:48px;border:2px solid #a67c24;color:var(--forest-dark);background:#fff9e9;box-shadow:0 3px 10px rgba(137,101,28,.14);white-space:normal;overflow-wrap:anywhere}
+#chooseInvoicePhoto:hover,#browseInvoicePhoto:hover{border-color:#805c16;background:#fff2ce;box-shadow:0 5px 14px rgba(137,101,28,.22)}
+#chooseInvoicePhoto:focus-visible,#browseInvoicePhoto:focus-visible{outline:3px solid var(--forest);outline-offset:3px}
 @media(max-width:360px){.share-actions{grid-template-columns:1fr}}
 @media print{.share-actions,.share-note,.share-status{display:none!important}}
 .install-status{grid-column:1/-1;width:100%;min-height:18px;margin:0;color:var(--forest);font-size:12px;font-weight:700;text-align:right}
