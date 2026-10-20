@@ -1,8 +1,8 @@
-const CACHE="diszkertek-kassza-v106";
+const CACHE="diszkertek-kassza-v107";
 const CASH_APP_URL=new URL("./",self.location.href);
 function cashNotificationUrl(value){try{const url=new URL(value||"./",CASH_APP_URL);if(url.origin===CASH_APP_URL.origin&&url.pathname.startsWith(CASH_APP_URL.pathname))return url.href;}catch(_){}return CASH_APP_URL.href;}
 function isCashWindow(client){try{const url=new URL(client.url);return url.origin===CASH_APP_URL.origin&&url.pathname.startsWith(CASH_APP_URL.pathname);}catch(_){return false;}}
-const ASSETS=["./","index.html","styles.css","app.js","hungarian-dates.js","supabase-config.js","supabase-data.js","icon.svg","manifest.webmanifest","assets/diszkertek-logo.png","assets/diszkertek-emblem.png","assets/icon-192.png","assets/icon-512.png","assets/apple-touch-icon.png"];
+const ASSETS=["./","index.html","styles.css","app.js","hungarian-dates.js","amount-inputs.js","supabase-config.js","supabase-data.js","icon.svg","manifest.webmanifest","assets/diszkertek-logo.png","assets/diszkertek-emblem.png","assets/icon-192.png","assets/icon-512.png","assets/apple-touch-icon.png"];
 
 self.addEventListener("install",event=>event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(ASSETS)).then(()=>self.skipWaiting())));
 self.addEventListener("activate",event=>event.waitUntil(Promise.all([caches.keys().then(keys=>Promise.all(keys.filter(key=>key!==CACHE).map(key=>caches.delete(key)))),self.clients.claim()])));
