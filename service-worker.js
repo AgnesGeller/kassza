@@ -1,4 +1,4 @@
-const CACHE="diszkertek-kassza-v108";
+const CACHE="diszkertek-kassza-v109";
 const CASH_APP_URL=new URL("./",self.location.href);
 function cashNotificationUrl(value){try{const url=new URL(value||"./",CASH_APP_URL);if(url.origin===CASH_APP_URL.origin&&url.pathname.startsWith(CASH_APP_URL.pathname))return url.href;}catch(_){}return CASH_APP_URL.href;}
 function isCashWindow(client){try{const url=new URL(client.url);return url.origin===CASH_APP_URL.origin&&url.pathname.startsWith(CASH_APP_URL.pathname);}catch(_){return false;}}
