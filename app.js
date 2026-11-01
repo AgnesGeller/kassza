@@ -1,7 +1,7 @@
 const STORAGE_KEY = "diszkertek-kassza-v1";
 const MANAGER_VIEW_KEY = "diszkertek-kassza-manager-view-v1";
 const ACTIVE_CASH_KEY = "diszkertek-kassza-active-cash-v1";
-const LEADERS = ["Ádám", "Ági", "Bendegúz", "Márk", "Tamás", "Zsolti"];
+const LEADERS = ["Ádám", "Ági", "Bendegúz", "Dimop", "Márk", "Tamás", "Zsolti"];
 const MANAGERS = ["Ági", "Tamás"];
 const CATEGORIES = {
   income: ["Bevétel – ügyféltől", "Pénzátvétel – munkatárstól", "Egyéb bevétel"],
