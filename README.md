@@ -6,12 +6,12 @@
 
 - név + egyéni PIN-kódos első belépés, készüléken megjegyzett munkamenet;
 - minden dolgozó csak a saját kasszáját látja;
-- Ági és Tamás teljes, szűrhető statisztikát lát, saját kasszát vezethet, és vezetői belépésből PIN nélkül megnyithatja bármelyik dolgozó kasszáját;
+- az irodai jogosultságú felhasználók teljes, szűrhető statisztikát látnak, saját kasszát vezethetnek, és irodai belépésből PIN nélkül megnyithatják bármelyik dolgozó kasszáját;
 - bevételek, kiadások, szerkesztés és törlés;
 - automatikus kasszaegyenleg;
 - péntektől csütörtökig tartó heti bontás;
 - valós idejű, több készülék közötti Supabase-szinkronizálás;
-- célzott mobilértesítés, ha Ági vagy Tamás más személy kasszáját módosítja;
+- célzott mobilértesítés, ha egy irodai jogosultságú felhasználó más személy kasszáját módosítja;
 - minden dolgozónak saját, péntek–csütörtök heti PDF-mentés;
 - vezetői szűrt PDF és CSV, valamint teljes JSON biztonsági mentés;
 - telepítés és alkalmazáson belüli frissítés.
@@ -26,4 +26,4 @@ A GitHub Pages cím megnyitása után a **Telepítés** gombbal az app a telefon
 
 ## Biztonsági mentés
 
-Minden dolgozó a **Mentés PDF-ben** gombbal letöltheti az aktuálisan kiválasztott péntek–csütörtök hét saját kasszáját. Ági és Tamás a **Teljes mentés** gombbal az összes elérhető adatot dátumozott JSON-fájlba mentheti; a vezetői PDF- és CSV-mentés az aktuális szűrés eredményét tartalmazza. A mentéseket külön felhőmappában is érdemes megőrizni.
+Minden dolgozó a **Mentés PDF-ben** gombbal letöltheti az aktuálisan kiválasztott péntek–csütörtök hét saját kasszáját. Az irodai jogosultságú felhasználók a **Teljes mentés** gombbal az összes elérhető adatot dátumozott JSON-fájlba menthetik; az irodai PDF- és CSV-mentés az aktuális szűrés eredményét tartalmazza. A mentéseket külön felhőmappában is érdemes megőrizni.

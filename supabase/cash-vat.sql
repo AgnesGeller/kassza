@@ -5,15 +5,15 @@ create or replace function kassza_private.apply_cash_vat_rate()
 returns trigger language plpgsql security definer set search_path='' as $$
 declare office boolean;
 begin
- select exists(select 1 from public.profiles p where p.id=auth.uid() and p.role='manager' and p.display_name in ('Ági','Tamás')) into office;
+ select exists(select 1 from public.profiles p where p.id=auth.uid() and p.role='manager' and p.display_name in ('Ági','Ferenc','Tamás')) into office;
  if new.receipt <> 'Számlás' then new.vat_rate:=null; return new; end if;
  if tg_op='INSERT' then
    new.vat_rate:=coalesce(new.vat_rate,27);
-   if not office and new.vat_rate<>27 then raise exception 'Az áfakulcsot csak Ági vagy Tamás módosíthatja.' using errcode='42501'; end if;
+   if not office and new.vat_rate<>27 then raise exception 'Az áfakulcsot csak irodai jogosultsággal lehet módosítani.' using errcode='42501'; end if;
  elsif old.receipt is distinct from new.receipt then
    if office then new.vat_rate:=coalesce(new.vat_rate,27); else new.vat_rate:=27; end if;
  elsif not office and new.vat_rate is distinct from old.vat_rate then
-   raise exception 'Az áfakulcsot csak Ági vagy Tamás módosíthatja.' using errcode='42501';
+   raise exception 'Az áfakulcsot csak irodai jogosultsággal lehet módosítani.' using errcode='42501';
  end if;
  return new;
 end $$;
@@ -24,8 +24,8 @@ create or replace function public.set_cash_vat_rate(p_entry_id uuid,p_rate numer
 returns public.entries language plpgsql security definer set search_path='' as $$
 declare entry public.entries%rowtype;
 begin
- if auth.uid() is null or not exists(select 1 from public.profiles p where p.id=auth.uid() and p.role='manager' and p.display_name in ('Ági','Tamás')) then
- raise exception 'Az áfakulcsot csak Ági vagy Tamás módosíthatja.' using errcode='42501'; end if;
+ if auth.uid() is null or not exists(select 1 from public.profiles p where p.id=auth.uid() and p.role='manager' and p.display_name in ('Ági','Ferenc','Tamás')) then
+ raise exception 'Az áfakulcsot csak irodai jogosultsággal lehet módosítani.' using errcode='42501'; end if;
  if p_rate is null or p_rate<0 or p_rate>100 or p_rate<>round(p_rate,2) then raise exception 'Az áfakulcs 0 és 100 közötti szám lehet, legfeljebb két tizedesjeggyel.'; end if;
  select * into entry from public.entries where id=p_entry_id for update;
  if not found then raise exception 'A tétel nem található.'; end if;

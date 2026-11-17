@@ -2,11 +2,11 @@
   const PROFILE_KEY = "diszkertek-kassza-profile-v1";
   const EMAILS = {
     "Ági": "agi@kassza.diszkertek.hu", "Bendegúz": "bendeguz@kassza.diszkertek.hu",
-    "Dimop": "dimop@kassza.diszkertek.hu",
+    "Dimop": "dimop@kassza.diszkertek.hu", "Ferenc": "ferenc@kassza.diszkertek.hu",
     "Ádám": "adam@kassza.diszkertek.hu", "Márk": "mark@kassza.diszkertek.hu",
     "Tamás": "tamas@kassza.diszkertek.hu", "Zsolti": "zsolti@kassza.diszkertek.hu"
   };
-  const MANAGERS = new Set(["Ági", "Tamás"]);
+  const MANAGERS = new Set(["Ági", "Ferenc", "Tamás"]);
   let client = null, channel = null;
   const config = window.KASSZA_SUPABASE || {};
   const configured = Boolean(config.url && config.publishableKey && !config.url.startsWith("IDE_"));

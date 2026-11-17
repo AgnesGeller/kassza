@@ -41,7 +41,7 @@ async function profileFor(userId: string) {
 }
 
 function manager(profile: any) {
-  return profile.role === "manager" && ["Ági", "Tamás"].includes(profile.display_name);
+  return profile.role === "manager" && ["Ági", "Ferenc", "Tamás"].includes(profile.display_name);
 }
 
 function validSubscription(value: any) {

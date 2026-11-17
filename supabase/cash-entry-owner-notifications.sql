@@ -1,4 +1,4 @@
--- Célzott Web Push értesítés, ha Ági vagy Tamás más személy kasszáját módosítja.
+-- Célzott Web Push értesítés, ha egy irodai jogosultságú felhasználó más személy kasszáját módosítja.
 
 begin;
 
@@ -181,7 +181,7 @@ begin
   select * into actor_profile
   from public.profiles
   where id = auth.uid() and role = 'manager';
-  if not found or actor_profile.display_name not in ('Ági', 'Tamás') then
+  if not found or actor_profile.display_name not in ('Ági', 'Ferenc', 'Tamás') then
     return case when tg_op = 'DELETE' then old else new end;
   end if;
 

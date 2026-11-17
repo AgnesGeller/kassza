@@ -1,8 +1,8 @@
 const STORAGE_KEY = "diszkertek-kassza-v1";
 const MANAGER_VIEW_KEY = "diszkertek-kassza-manager-view-v1";
 const ACTIVE_CASH_KEY = "diszkertek-kassza-active-cash-v1";
-const LEADERS = ["Ádám", "Ági", "Bendegúz", "Dimop", "Márk", "Tamás", "Zsolti"];
-const MANAGERS = ["Ági", "Tamás"];
+const LEADERS = ["Ádám", "Ági", "Bendegúz", "Dimop", "Ferenc", "Márk", "Tamás", "Zsolti"];
+const MANAGERS = ["Ági", "Ferenc", "Tamás"];
 const CATEGORIES = {
   income: ["Bevétel – ügyféltől", "Pénzátvétel – munkatárstól", "Egyéb bevétel"],
   expense: ["Működési költség", "Ügyfélkiadás", "Pénzátadás – munkatársnak", "Egyéb kiadás"]
@@ -83,7 +83,7 @@ async function syncPushNotifications(askPermission=false){
   if(permission==="default"&&askPermission)permission=await Notification.requestPermission();
   if(permission!=="granted"){button.disabled=false;button.textContent="Mobilértesítések bekapcsolása";notificationMessage(permission==="denied"?"Az értesítések le vannak tiltva a böngésző beállításaiban.":"Kapcsold be az értesítéseket ezen a készüléken.",permission==="denied");return;}
   button.disabled=true;button.textContent="Értesítések beállítása…";
-  try{const registration=await navigator.serviceWorker.ready,publicKey=await KasszaDB.pushPublicKey();let subscription=await registration.pushManager.getSubscription();if(!subscription)subscription=await registration.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:pushKeyBytes(publicKey)});await KasszaDB.savePushSubscription(subscription);button.textContent="✓ Mobilértesítések bekapcsolva";notificationMessage(session.role==="manager"?"A védett dátumú kísérletekről és a kasszádat érintő vezetői módosításokról értesítést kapsz.":"Értesítést kapsz, ha Ági vagy Tamás módosít a kasszádban.");}
+  try{const registration=await navigator.serviceWorker.ready,publicKey=await KasszaDB.pushPublicKey();let subscription=await registration.pushManager.getSubscription();if(!subscription)subscription=await registration.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:pushKeyBytes(publicKey)});await KasszaDB.savePushSubscription(subscription);button.textContent="✓ Mobilértesítések bekapcsolva";notificationMessage(session.role==="manager"?"A védett dátumú kísérletekről és a kasszádat érintő vezetői módosításokról értesítést kapsz.":"Értesítést kapsz, ha egy irodai felhasználó módosít a kasszádban.");}
   catch(error){button.disabled=false;button.textContent="Mobilértesítések bekapcsolása";notificationMessage(`Az értesítést nem sikerült bekapcsolni: ${error.message}`,true);}
 }
 async function reportProtectedAttempt(record,action){const result=await KasszaDB.alertProtectedAttempt(record,action);if(!result?.logged&&!result?.duplicate&&!result?.ignored)throw new Error("A vezetői értesítés nem igazolható.");return result;}

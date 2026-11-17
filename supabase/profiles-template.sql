@@ -5,11 +5,12 @@ select id,
     when 'agi@kassza.diszkertek.hu' then 'Ági'
     when 'bendeguz@kassza.diszkertek.hu' then 'Bendegúz'
     when 'dimop@kassza.diszkertek.hu' then 'Dimop'
+    when 'ferenc@kassza.diszkertek.hu' then 'Ferenc'
     when 'mark@kassza.diszkertek.hu' then 'Márk'
     when 'tamas@kassza.diszkertek.hu' then 'Tamás'
     when 'zsolti@kassza.diszkertek.hu' then 'Zsolti'
   end,
-  case when email in ('agi@kassza.diszkertek.hu','tamas@kassza.diszkertek.hu') then 'manager' else 'worker' end
+  case when email in ('agi@kassza.diszkertek.hu','ferenc@kassza.diszkertek.hu','tamas@kassza.diszkertek.hu') then 'manager' else 'worker' end
 from auth.users
-where email in ('adam@kassza.diszkertek.hu','agi@kassza.diszkertek.hu','bendeguz@kassza.diszkertek.hu','dimop@kassza.diszkertek.hu','mark@kassza.diszkertek.hu','tamas@kassza.diszkertek.hu','zsolti@kassza.diszkertek.hu')
+where email in ('adam@kassza.diszkertek.hu','agi@kassza.diszkertek.hu','bendeguz@kassza.diszkertek.hu','dimop@kassza.diszkertek.hu','ferenc@kassza.diszkertek.hu','mark@kassza.diszkertek.hu','tamas@kassza.diszkertek.hu','zsolti@kassza.diszkertek.hu')
 on conflict (id) do update set display_name=excluded.display_name, role=excluded.role;
