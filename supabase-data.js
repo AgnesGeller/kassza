@@ -8,11 +8,28 @@
   };
   const MANAGERS = new Set(["Ági", "Ferenc", "Tamás"]);
   let client = null, channel = null;
+  let accessExpiryTimer = null;
   const config = window.KASSZA_SUPABASE || {};
   const configured = Boolean(config.url && config.publishableKey && !config.url.startsWith("IDE_"));
   if (configured && window.supabase) client = window.supabase.createClient(config.url, config.publishableKey, {
     auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false }
   });
+
+  function checkCashAccess(user) {
+    clearTimeout(accessExpiryTimer);
+    if(user?.id!=="7a44a4a3-19cd-4bba-a3a2-c8a0b9b9709a")return;
+    const until=user?.app_metadata?.cash_access_until;
+    const remaining=Date.parse(until||"")-Date.now();
+    if(!Number.isFinite(remaining)||remaining<=0){
+      localStorage.removeItem(PROFILE_KEY);
+      throw new Error("A Kassza-hozzáférésed lejárt. Kérd az iroda segítségét.");
+    }
+    accessExpiryTimer=setTimeout(()=>{
+      try{checkCashAccess(user);}catch(_){
+        client.auth.signOut({scope:"local"}).catch(()=>{}).finally(()=>location.reload());
+      }
+    },Math.min(remaining,86400000));
+  }
 
   const mapEntry = row => ({ id: row.id, userId: row.user_id, leader: row.leader_name,
     direction: row.direction, category: row.category, transferType: row.transfer_type,
@@ -39,6 +56,7 @@
       if (!client) throw new Error("A Supabase kapcsolat még nincs beállítva.");
       const { data, error } = await client.auth.signInWithPassword({ email: EMAILS[name], password: pin });
       if (error) throw new Error("Hibás PIN-kód.");
+      checkCashAccess(data.user);
       return profileFrom(name,data.user.id);
     },
     async profiles(){const {data,error}=await client.from("profiles").select("id,display_name,role").order("display_name");if(error)throw error;return data.map(item=>({userId:item.id,name:item.display_name,role:item.role}));},
@@ -47,6 +65,7 @@
       const { data, error } = await client.auth.getSession();
       if (error) throw error;
       if (!data.session) { localStorage.removeItem(PROFILE_KEY); return null; }
+      checkCashAccess(data.session.user);
       try {
         const cached = JSON.parse(localStorage.getItem(PROFILE_KEY));
         if (cached?.userId === data.session.user.id) return cached;

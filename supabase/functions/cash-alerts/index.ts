@@ -29,7 +29,12 @@ async function authenticatedUser(request: Request) {
     headers: { apikey: SERVICE_KEY, Authorization: authorization },
   });
   if (!response.ok) throw new Error("A munkamenet nem érvényes.");
-  return response.json();
+  const user = await response.json();
+  const until = user.app_metadata?.cash_access_until;
+  if (user.id === "7a44a4a3-19cd-4bba-a3a2-c8a0b9b9709a" && (!until || !Number.isFinite(Date.parse(until)) || Date.parse(until) <= Date.now())) {
+    throw new Error("A Kassza-hozzáférés lejárt.");
+  }
+  return user;
 }
 
 async function profileFor(userId: string) {
@@ -41,7 +46,8 @@ async function profileFor(userId: string) {
 }
 
 function manager(profile: any) {
-  return profile.role === "manager" && ["Ági", "Ferenc", "Tamás"].includes(profile.display_name);
+  return profile.role === "manager" && ["Ági", "Ferenc", "Tamás"].includes(profile.display_name) &&
+    (profile.id !== "7a44a4a3-19cd-4bba-a3a2-c8a0b9b9709a" || Date.now() < Date.parse("2026-12-22T23:00:00Z"));
 }
 
 function validSubscription(value: any) {
@@ -115,7 +121,9 @@ async function processEntryEvent(eventId: string, keys: any) {
   const event = events?.[0];
   if (!event) return { duplicate: true };
 
-  const subscriptions = await rest(
+  const expiredRecipient = Date.now() >= Date.parse("2026-12-22T23:00:00Z") &&
+    event.owner_id === "7a44a4a3-19cd-4bba-a3a2-c8a0b9b9709a";
+  const subscriptions = expiredRecipient ? [] : await rest(
     `cash_push_subscriptions?owner_id=eq.${encodeURIComponent(event.owner_id)}` +
       "&enabled=eq.true&select=id,endpoint,p256dh,auth",
   );

@@ -113,8 +113,9 @@ function validateSelectedCustomer(){if(!customerCategorySelected())return true;c
 function syncManagerTheme(){document.body.classList.toggle("manager-statistics",session?.role==="manager"&&managerView==="statistics");document.body.classList.toggle("manager-own",session?.role==="manager"&&managerView==="own");}
 
 function populateLeaders() {
-  $("#profileSelect").insertAdjacentHTML("beforeend",LEADERS.map(n=>`<option>${escapeHTML(n)}</option>`).join(""));
-  $("#profileButtons").innerHTML=LEADERS.map(n=>`<button class="profile-button" type="button" data-profile="${escapeHTML(n)}">${escapeHTML(n)}</button>`).join("");
+  const loginLeaders=LEADERS.filter(name=>name!=="Ferenc"||Date.now()<Date.parse("2026-12-22T23:00:00Z"));
+  $("#profileSelect").insertAdjacentHTML("beforeend",loginLeaders.map(n=>`<option>${escapeHTML(n)}</option>`).join(""));
+  $("#profileButtons").innerHTML=loginLeaders.map(n=>`<button class="profile-button" type="button" data-profile="${escapeHTML(n)}">${escapeHTML(n)}</button>`).join("");
   $("#filterLeader").insertAdjacentHTML("beforeend",LEADERS.map(n=>`<option>${escapeHTML(n)}</option>`).join(""));
 }
 function updateCategories() {
